@@ -1,0 +1,97 @@
+This patch file needs to be placed inside jhalfs/custom/. The patch
+is automatically applied by the './jhalfs run', and what it does is
+to modify some of the instructions of the LFS book so that packages
+are installed nicely on the GoboLinux tree.
+
+Signed-off-by: Lucas C. Villa Real <lucasvr@gobolinux.org>
+
+Index: chapter06/ncurses.xml
+===================================================================
+--- chapter06/ncurses.xml	(revision 10386)
++++ chapter06/ncurses.xml	(working copy)
+@@ -116,6 +116,8 @@
+     non-wide-character Ncurses libraries. Trick such applications into linking with
+     wide-character libraries by means of symlinks and linker scripts:</para>
+ 
++<screen><userinput remap="install">mkdir -p /usr/lib/pkgconfig</userinput></screen>
++
+ <screen><userinput remap="install">for lib in ncurses form panel menu ; do
+     rm -vf                    /usr/lib/lib${lib}.so
+     echo "INPUT(-l${lib}w)" &gt; /usr/lib/lib${lib}.so
+Index: chapter06/adjusting.xml
+===================================================================
+--- chapter06/adjusting.xml	(revision 10386)
++++ chapter06/adjusting.xml	(working copy)
+@@ -57,19 +57,19 @@
+ 
+   <para os="d">Now make sure that we're setup to use the correct startfiles:</para>
+ 
+-<screen os="e"><userinput>grep -o '/usr/lib.*/crt[1in].*succeeded' dummy.log</userinput></screen>
++<screen os="e"><userinput>grep -o '/lib.*/crt[1in].*succeeded' dummy.log</userinput></screen>
+ 
+   <para os="f">If everything is working correctly, there should be no errors,
+     and the output of the last command will be:</para>
+ 
+-<screen><computeroutput>/usr/lib/crt1.o succeeded
+-/usr/lib/crti.o succeeded
+-/usr/lib/crtn.o succeeded</computeroutput></screen>
++<screen><computeroutput>/lib/crt1.o succeeded
++/lib/crti.o succeeded
++/lib/crtn.o succeeded</computeroutput></screen>
+ 
+   <para os="g">Verify that the compiler is searching for the correct header
+   files:</para>
+ 
+-<screen><userinput>grep -B1 '^ /usr/include' dummy.log</userinput></screen>
++<screen><userinput>grep -B3 '^ /usr/local/include' dummy.log</userinput></screen>
+ 
+   <para os="h">This command should return successfully with the following output:</para>
+ 
+Index: chapter06/systemd.xml
+===================================================================
+--- chapter06/systemd.xml	(revision 10386)
++++ chapter06/systemd.xml	(working copy)
+@@ -79,7 +79,7 @@
+     chroot environment as explained at the beginning of this chapter for the
+     following script to work.</para>
+ 
+-<screen><userinput remap="install">bash &udev-lfs;/init-net-rules.sh</userinput></screen>
++<screen><userinput remap="install">echo bash &udev-lfs;/init-net-rules.sh</userinput></screen>
+   </sect2>
+ 
+   <sect2 id="contents-udev" role="content">
+Index: chapter06/gcc.xml
+===================================================================
+--- chapter06/gcc.xml	(revision 10386)
++++ chapter06/gcc.xml	(working copy)
+@@ -202,7 +202,7 @@
+     href="adjusting.xml"
+     xpointer="xpointer(//*[@os='g'])"/>
+ 
+-<screen><userinput>grep -B4 '^ /usr/include' dummy.log</userinput></screen>
++<screen><userinput>grep -B4 '^ /usr/local/include' dummy.log</userinput></screen>
+ 
+     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"
+     href="adjusting.xml"
+Index: chapter07/network.xml
+===================================================================
+--- chapter07/network.xml	(revision 10386)
++++ chapter07/network.xml	(working copy)
+@@ -130,7 +130,7 @@
+ 
+     <para>The following command creates a sample file for the
+     <emphasis>eth0</emphasis> device with a static IP address:</para>
+-
++<!--
+ <screen><userinput>cd /etc/sysconfig/
+ cat &gt; ifconfig.eth0 &lt;&lt; "EOF"
+ <literal>ONBOOT=yes
+@@ -141,7 +141,7 @@
+ PREFIX=24
+ BROADCAST=192.168.1.255</literal>
+ EOF</userinput></screen>
+-
++-->
+     <para>The values of these variables must be changed in every file to match
+     the proper setup.</para>
+ 

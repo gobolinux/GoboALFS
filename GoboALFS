@@ -1,0 +1,237 @@
+#!/bin/bash
+
+# GoboALFS script to automate the bootstrap of GoboLinux based on the ALFS book.
+# No assumptions are made regarding the Linux distribution running on the host.
+#
+# Lucas C. Villa Real <lucasvr@gobolinux.org>
+
+PACKAGEDIR=$(readlink -f $(dirname "$0"))/Packages
+BUILDDIR=$(readlink -f $(dirname "$0"))/RootFS
+PATCHES=(
+    "http://lucasvr.gobolinux.org/gobolinux/01-gobolinux-jhalfs.patch"
+    "http://lucasvr.gobolinux.org/gobolinux/02-gobolinux-book.patch"
+)
+ALFS_CONFIGURATION="http://lucasvr.gobolinux.org/gobolinux/configuration"
+
+###
+### Sanity checks
+###
+
+if ! grep -q "^lfs:" /etc/passwd || ! grep -q "^lfs:" /etc/group
+then
+    echo "Please create the 'lfs' user and group before proceeding."
+    echo "Also, certify that 'lfs' has suid rights."
+    exit 1
+fi
+
+if [ $UID = 0 ]
+then
+    echo "This script should not be run as root. Please invoke it with a regular"
+    echo "user account with sudo privileges."
+    exit 1
+fi
+
+sudo whoami >& /dev/null
+if [ $? != 0 ]
+then
+    echo "Please make sure that your user has sudo privileges before continuing."
+    exit 1
+fi
+
+###
+### Operation
+###
+
+[ ! -d "$BUILDDIR" ] && mkdir -p "$BUILDDIR"
+[ ! -d "$PACKAGEDIR" ] && mkdir -p "$PACKAGEDIR"
+
+if [ $(ls "$BUILDDIR"/ | wc -l | awk {'print $1'}) -gt 0 ]
+then
+    echo "Using existing build directory $BUILDDIR"
+fi
+
+if [ ! -d jhalfs-trunk ]
+then
+    echo "Downloading JHALFS from Subversion"
+	svn co svn://svn.linuxfromscratch.org/ALFS/jhalfs/trunk jhalfs-trunk
+
+    mkdir -p jhalfs-trunk/custom
+    pushd jhalfs-trunk > /dev/null
+
+    echo "Obtaining patches"
+    for patchFile in ${PATCHES[@]}; do wget -c "$patchFile" -O custom/$(basename "$patchFile"); done
+
+    echo "Patching"
+    jhalfsPatch=$(ls custom/*gobolinux-jhalfs.patch)
+    patch -i "$jhalfsPatch" -p0
+
+    echo "Obtaining default configuration file"
+    wget -c "$ALFS_CONFIGURATION"
+
+    echo "Processing configuration file"
+    perl -pi -e "s,^BUILDDIR=.*,BUILDDIR=\"$BUILDDIR\",g" configuration
+    [ ! -d "/Users" -a -d "/home" ] && perl -pi -e 's,LHOME=.*,LHOME=\"/home\",g' configuration
+
+    popd > /dev/null
+fi
+
+if [ ! -d "$BUILDDIR/Programs/BootScripts-ALFS" ]
+then
+    pushd jhalfs-trunk > /dev/null
+    echo "Running menuconfig."
+    make menuconfig
+
+    echo "Press ENTER to build or CTRL+C to abort."
+    read
+    ./jhalfs run
+    popd > /dev/null
+fi
+
+###
+### Move left-over files to the packages where they belong
+###
+
+function MoveSettingsFile() {
+    local settingsFile="$1"
+    local programName="$2"
+    local programVersion=$(ls $BUILDDIR/Programs/$programName | grep -v Settings)
+    if [ -e "$BUILDDIR/System/Index/etc/$settingsFile" -a ! -h "$BUILDDIR/System/Index/etc/$settingsFile" ]
+    then
+        mkdir -p "$BUILDDIR/Programs/$programName/Settings"
+        mkdir -p "$BUILDDIR/Programs/$programName/$programVersion/Resources/Defaults/Settings"
+        cp -v "$BUILDDIR/System/Index/etc/$settingsFile" "$BUILDDIR/Programs/$programName/Settings"
+        mv -v "$BUILDDIR/System/Index/etc/$settingsFile" "$BUILDDIR/Programs/$programName/$programVersion/Resources/Defaults/Settings"
+        ln -v -s "/Programs/$programName/Settings/$settingsFile" "$BUILDDIR/System/Index/etc/$settingsFile"
+    fi
+}
+
+MoveSettingsFile nsswitch.conf Glibc
+MoveSettingsFile udev/hwdb.bin Udev
+MoveSettingsFile inittab BootScripts-ALFS
+MoveSettingsFile syslog.conf Sysklogd
+
+function MoveFile() {
+    local filename="$1"
+    local programName="$2"
+    local programVersion=$(ls $BUILDDIR/Programs/$programName | grep -v Settings)
+    if [ -e "$BUILDDIR/System/Index/$filename" -a ! -h "$BUILDDIR/System/Index/$filename" ]
+    then
+        mv -v "$BUILDDIR/System/Index/$filename" "$BUILDDIR/Programs/$programName/$programVersion/$filename"
+        ln -v -s "/Programs/$programName/$programVersion/$filename" "$BUILDDIR/System/Index/$filename"
+    fi
+}
+
+MoveFile lib/libstdc++.la GCC
+MoveFile lib/locale Glibc
+MoveFile share/zoneinfo Glibc
+
+###
+### Build Python and dependencies with BLFS
+### Please see 01-gobolinux-jhalfs.patch for BLFS' default configuration file.
+###
+
+if [ ! -d "$BUILDDIR/blfs_root" ]
+then
+    sudo mkdir -p "$BUILDDIR/var/lib/jhalfs/BLFS"
+    sudo chown $UID a+rwx "$BUILDDIR/var/lib/jhalfs/BLFS"
+
+    pushd jhalfs-trunk > /dev/null
+    perl -pi -e "s,^BUILDDIR=.*,BUILDDIR=\"$BUILDDIR\",g" install-blfs-tools.sh
+    perl -pi -e "s,^TRACKING_DIR=.*,TRACKING_DIR=\"$BUILDDIR/var/lib/jhalfs/BLFS\",g" install-blfs-tools.sh
+    ./install-blfs-tools.sh
+    popd > /dev/null
+
+    pushd "$BUILDDIR/blfs_root" > /dev/null
+    echo yes | ./gen_pkg_book.sh
+    mkdir -p work
+    popd > /dev/null
+
+    pushd "$BUILDDIR/blfs_root/work" > /dev/null
+    ../gen-makefile.sh
+    popd > /dev/null
+    
+    # Fetch archives
+    pushd "$BUILDDIR/sources" > /dev/null
+    grep --no-filename wget ../blfs_root/scripts/* | grep -v FTP_SERVER | while read line
+    do
+        eval $line
+    done
+    popd > /dev/nul -
+
+    # Patch build scripts
+    blfsPrograms=( )
+    for fname in "$BUILDDIR"/blfs_root/scripts/*
+    do
+        # Guess program name/case..
+        appName=$(basename "$fname" | sed 's,\(.*\)-\(.*\)-\(.*\),\3,g')
+        appName=$(python -c "print '$appName'[0].upper() + '$appName'[1:];")
+        echo "$appName" | grep -q "^Lib" && appName=$(python -c "print '$appName'[0:3] + '$appName'[3:].upper();")
+        echo "$appName" | grep -q "[0-9]$" && appName=$(echo "$appName" | sed 's,[0-9]*$,,g')
+
+        # Guess program version
+        appVersion=$(grep "^PACKAGE=" "$fname" | cut -d= -f2 | sed 's,\(.*\)-\(.*\).tar.*,\2,g')
+
+        perl -pi -e "s,^sudo -E ,,g" "$fname"
+        perl -pi -e "s,^sudo ,,g" "$fname"
+        perl -pi -e "s,make -j1 install,make -j1 install prefix=/Programs/$appName/$appVersion,g" "$fname"
+        perl -pi -e "s,/usr/,/Programs/$appName/$appVersion/,g" "$fname"
+
+        blfsPrograms=("${blfsPrograms[@]}" "$appName")
+    done
+
+    perl -pi -e "s,xsltproc,echo xsltproc,g" "$BUILDDIR/blfs_root/work/Makefile"
+    perl -pi -e "s,xmllint,echo xmllint,g" "$BUILDDIR/blfs_root/work/Makefile"
+    perl -pi -e "s,sed -i,echo sed -i,g" "$BUILDDIR/blfs_root/work/Makefile"
+    perl -pi -e "s,rm track,echo rm track,g" "$BUILDDIR/blfs_root/work/Makefile"
+    perl -pi -e "s,^TRACKING_FILE=.*,TRACKING_FILE=/var/lib/jhalfs/BLFS/instpkg.xml,g" "$BUILDDIR/blfs_root/work/Makefile"
+
+    # Compile! (TODO: this is better suited outside this block)
+    sudo chroot "$BUILDDIR" /bin/bash -c "cd /blfs_root/work; make"
+
+    # Symlink
+    for entry in "${blfsPrograms[@]}"
+    do
+        [ ! -z "$entry" ] && sudo chroot "$BUILDDIR" /tools/bin/SymlinkProgram $entry
+    done
+fi
+
+###
+### Create packages using plain tar
+###
+
+pushd "$BUILDDIR/Programs" > /dev/null
+for appName in *
+do
+    echo "Creating package for $appVersion"
+    appVersion=$(ls "$appName/" | grep -v "Settings\|Current")
+    find "$appName/$appVersion" -type d | sort -R | while read line
+    do 
+        sudo rmdir $line >& /dev/null
+    done
+    sudo tar cjf "$PACKAGEDIR/$appName--$appVersion-r1--$(uname -m).tar.bz2" "$appName"
+done
+popd > /dev/null
+
+###
+### TODO: Fetch Compile and Scripts from Subversion (/System/Index branch). 
+### Perhaps this could be part of another script?
+###
+
+### TODO: make sure the following files are created by the live cd scripts:
+### /etc/fstab 
+### /etc/group
+### /etc/gshadow
+### /etc/hosts
+### /etc/inittab
+### /etc/inputrc
+### /etc/localtime(symlink)
+### /etc/lsb-release(?)
+### /etc/passwd(root, bin, nobody)
+### /etc/profile
+###
+### /Data/Variable/mount/utab (empty)
+### /Data/Variable/log/btmp (empty)
+### /Data/Variable/log/wtmp (empty)
+### /Data/Variable/log/lastlog (empty)
+### ./Data/Variable/cache/ldconfig/ (directory)
+###

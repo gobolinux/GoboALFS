@@ -1,0 +1,219 @@
+#!/tools/bin/bash
+
+if [ $UID != 0 ]
+then sudo_exec=sudo
+else sudo_exec=
+fi
+
+function create_link() {
+   [ -e "$2" ] || ln -nfs "$1" "$2"
+   true
+}
+
+function create_dir() {
+   [ -d "$1" ] || mkdir -p "$1"
+   [ "$2" ] && $sudo_exec chown $2 "$1"
+   [ "$3" ] && $sudo_exec chmod $3 "$1"
+   true
+}
+
+function Undo_Legacy_Tree() {
+   if [ -d "/jhalfs" ]
+   then
+      # Unroll the creation of standard directories
+      find / -type d | grep -v "^/jhalfs\|/tools\|/proc\|/dev\|/sources" | sort -n | sort -r | xargs rmdir 2> /dev/null
+      rm -f /var/lock /var/run
+      rmdir /var
+      rm -f /usr/{doc,info,man} /usr/local/{doc,info,man}
+      rmdir /usr/local /usr
+
+      # Cannot touch /proc and /dev from within the chroot. We will take care of them later.
+      #rmdir proc
+      #rmdir dev
+  fi
+}
+
+function Create_Filesystem_Tree() {
+   #
+   # The GoboLinux directory hierarchy
+   #
+   root="$1"
+   superuser="$2"
+   usesystemindex="$3"
+
+   if [ "$usesystemindex" ]
+   then
+      create_dir $root/System/Index/etc
+      create_dir $root/System/Index/bin
+      create_dir $root/System/Index/lib
+      create_dir $root/System/Index/lib64
+      create_dir $root/System/Index/libexec
+      create_dir $root/System/Index/include
+      create_dir $root/System/Index/sbin
+      create_dir $root/System/Index/share/man
+      create_dir $root/System/Index/share/info
+      variabledir="Data/Variable"
+      filesdir="Data"
+   else
+      create_dir $root/Depot
+      variabledir="System/Variable"
+      filesdir="Files"
+   fi
+
+   create_dir $root/System/Links/Tasks
+   create_dir $root/System/Links/Environment
+   create_dir $root/$variabledir/log
+   create_dir $root/$variabledir/tmp 0 a+wt
+   create_dir $root/$variabledir/mail
+   create_dir $root/$variabledir/run
+   create_dir $root/$variabledir/lock 0 1777
+   create_dir $root/$variabledir/spool
+   create_dir $root/$variabledir/cache
+   create_dir $root/$variabledir/empty 0 0755
+   create_dir $root/$variabledir/lib
+   create_dir $root/$variabledir/lib/misc
+   create_dir $root/System/Kernel
+   create_dir $root/System/Kernel/Boot
+   create_dir $root/System/Kernel/Objects
+   create_dir $root/System/Kernel/Modules
+   create_dir $root/System/Kernel/Devices
+   create_dir $root/System/Kernel/Status
+   create_dir $root/System/Kernel/Config
+   create_dir $root/Users/$superuser
+   create_dir $root/$filesdir/Compile/Archives 0.sys 2755
+   create_dir $root/$filesdir/Compile/Sources 0.sys 2755
+   create_dir $root/$filesdir/Compile/Store 0.sys 2755
+   create_dir $root/Mount/.Pivot
+   create_dir $root/Mount/CD-ROM
+   create_dir $root/Mount/GoboLinux
+   create_dir $root/Mount/Floppy
+   create_dir $root/Mount/TmpFS
+   create_dir $root/Mount/Media
+   create_dir $root/Programs
+
+
+   #
+   # Legacy Links
+   #
+   create_dir $root/usr
+
+   if [ "$usesystemindex" ]
+   then
+      create_link System/Index/lib            $root/lib
+      create_link System/Index/bin            $root/bin
+      create_link System/Index/sbin           $root/sbin
+      create_link ../System/Index/bin         $root/usr/bin
+      create_link ../System/Index/include     $root/usr/include
+      create_link ../System/Index/lib         $root/usr/lib
+      create_link ../System/Index/lib64       $root/usr/lib64
+      create_link ../System/Index/share/man   $root/usr/man
+      create_link ../System/Index/sbin        $root/usr/sbin
+      create_link ../System/Index/share       $root/usr/share
+      #create_link bin                         $root/System/Index/sbin
+      # compatibility links
+      create_link ../../System/Index/bin      $root/System/Links/Executables
+      create_link ../../System/Index/lib      $root/System/Links/Libraries
+      create_link ../../System/Index/share    $root/System/Links/Shared
+      create_link ../../System/Index/include  $root/System/Links/Headers
+      create_link ../Data/Variable            $root/System/Variable
+      create_link ../System/Index/etc         $root/System/Settings
+   else
+      create_dir $root/System/Links/Executables
+      create_dir $root/System/Links/Libraries
+      create_dir $root/System/Links/Headers
+      create_dir $root/System/Links/Shared
+      create_dir $root/System/Links/Manuals/info
+
+      create_link System/Links/Libraries      $root/lib
+      create_link System/Links/Executables    $root/bin
+      create_link System/Links/Executables    $root/sbin
+      create_link ../System/Links/Executables $root/usr/bin
+      create_link ../System/Links/Executables $root/usr/sbin
+      create_link ../System/Links/Headers     $root/usr/include
+      create_link ../System/Links/Libraries   $root/usr/lib
+      create_link ../System/Links/Manuals     $root/usr/man
+      create_link ../System/Links/Shared      $root/usr/share
+      create_link ../Manuals                  $root/System/Links/Shared/man
+      create_dir $root/System/Settings
+   fi
+   create_link Users/$superuser            $root/root
+   create_link $variabledir                $root/var
+   create_link $variabledir                $root/run
+   create_link $variabledir/tmp            $root/tmp
+   create_link System/Kernel/Objects       $root/sys
+   create_link System/Kernel/Devices       $root/dev
+   create_link System/Kernel/Status        $root/proc
+   create_link System/Kernel/Config        $root/config
+   create_link System/Settings             $root/etc
+   create_link System/Kernel/Boot          $root/boot
+   create_link Mount                       $root/mnt
+   create_link Mount/Media                 $root/media
+   create_link $filesdir                   $root/srv
+   create_link /System/Kernel/Modules      $root/System/Links/Libraries/modules
+   create_link .                           $root/usr/X11R6
+   create_link .                           $root/usr/local
+}
+
+function Create_Device_Nodes() {
+   #
+   # FIFOs and device nodes
+   #
+   root="$1"
+
+   if ! [ -e $root/System/Kernel/Devices/log ]
+   then mkfifo $root/System/Kernel/Devices/log
+   fi
+   
+   if ! [ -e $root/System/Kernel/Devices/initctl ]
+   then mkfifo -m 0600 $root/System/Kernel/Devices/initctl
+   fi
+
+   if ! [ -e $root/System/Kernel/Devices/fd ]
+   then ln -sf /System/Kernel/Status/self/fd $root/System/Kernel/Devices/
+   fi
+
+   function create_node() {
+      unset mode
+      if [ "$5" ]
+      then mode="-m$5"
+      fi
+      if ! [ -e "$root/System/Kernel/Devices/$1" ]
+      then $sudo_exec mknod $root/System/Kernel/Devices/$1 $2 $3 $4 $mode
+      fi
+      true
+   }
+
+   create_node console c 5 1 0600 
+   create_node hda     b 3 0
+   create_node hdb     b 3 64
+   create_node hdc     b 22 0
+   create_node hdd     b 22 64
+   for i in `seq 0 31`
+   do
+      create_node loop$i b 7 $i
+   done
+   create_node null    c 1 3 0666
+   create_node ram0    b 1 0
+   create_node random  c 1 8
+   create_node scd0    b 11 0
+   create_node scd1    b 11 1
+   create_node scd2    b 11 2
+   create_node scd3    b 11 3
+   create_node scd4    b 11 4
+   create_node sda     b 8 0
+   create_node sdb     b 8 16
+   create_node sdc     b 8 32
+   create_node sdd     b 8 48
+   create_node tty0    c 4 0
+   create_node tty1    c 4 1
+   create_node tty2    c 4 2
+   create_node tty3    c 4 3
+   create_node tty4    c 4 4
+   create_node tty5    c 4 5
+   create_node tty6    c 4 6
+   create_node ttyS0   c 4 64
+   create_node urandom c 1 9
+}
+
+Undo_Legacy_Tree
+Create_Filesystem_Tree "/" "root" "yes"

@@ -1,0 +1,10 @@
+ALFS allows one to invoke hooks to determine how packages will be built.
+The GoboLinux hook is installed as $ALFS_DIR/pkgmnt/packInstall-gobolinux.sh,
+which executes this package's SymlinkProgram utility after installing
+the LFS programs under /Programs/<App>/<Version>.
+
+ALFS will expect to find the contents of this directory packed as a tarball
+and available on the web. In practice it's enough to launch an httpd in your
+local host and just modify the contents of the 'gobolinux-repository' entity
+in $ALFS_DIR/pkgmnt/packageManager-gobolinux.xml. Also please make sure to
+update the bootstrap-url and bootstrap-md5 entities in the same file.
