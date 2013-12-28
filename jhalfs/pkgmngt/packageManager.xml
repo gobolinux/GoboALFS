@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: packageManager.xml 3561 2012-02-19 10:54:17Z pierre $ -->
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+  "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY gobolinux-repository "http://lucasvr.gobolinux.org/gobolinux/">
+<!ENTITY bootstrap-url "&gobolinux-repository;gobolinux_alfs-1.0.tar.gz">
+<!ENTITY bootstrap-md5 "7cb01e0defcbac063e0a980b739824a5">
+]>
+
+<article>
+
+<sect1 id="package">
+        <para>Download: <ulink url="&bootstrap-url;"/></para>
+        <para>MD5 sum: <literal>&bootstrap-md5;</literal></para>
+</sect1>
+
+<sect1 id="ch-tools-pkgmngt" role="wrap">
+  <?dbhtml filename="gobolinux.html"?>
+  <sect2 role="installation">
+      <screen><userinput remap="pre"></userinput></screen>
+      <screen><userinput remap="configure"></userinput></screen>
+      <screen><userinput remap="make">make</userinput></screen>
+      <screen><userinput remap="install">make install</userinput></screen>
+  </sect2>
+</sect1>
+
+<sect1 id="ch-pkgmngt-creatingdirs">
+    <screen><userinput>/tools/bin/CreateGoboLinuxTree
+for dir in arpa bits gnu net netash netatalk netax25 neteconet netinet netipx netiucv netpacket netrom netrose nfs protocols rpc rpcsvc scsi sys; do mkdir -p /usr/include/$dir; done
+    </userinput></screen>
+</sect1>
+
+<sect1 id="ch-pkgmngt-createfiles">
+    <screen><userinput></userinput></screen>
+</sect1>
+
+<sect1 id="ch-system-pkgmngt" role="wrap">
+  <?dbhtml filename="gobolinux.html"?>
+
+  <sect2 role="installation">
+      <screen><userinput remap="make"></userinput></screen>
+
+      <!-- Those instructions are executed with PKG_DEST set. They are not processed
+      in any way to add $PKG_DEST at some place, and the PKG_DEST directory is not
+      populated before, so it is basically empty. You have thus to create any directory
+      needed in $PKG_DEST and not otherwise created by the make install command. -->
+      <screen><userinput remap="install"></userinput></screen>
+  </sect2>
+
+</sect1>
+</article>

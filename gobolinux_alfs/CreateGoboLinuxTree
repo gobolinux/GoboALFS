@@ -18,12 +18,20 @@ function create_dir() {
 }
 
 function Undo_Legacy_Tree() {
+   local usesystemindex="$1"
    if [ -d "/jhalfs" ]
    then
       # Unroll the creation of standard directories
       find / -type d | grep -v "^/jhalfs\|/tools\|/proc\|/dev\|/sources" | sort -n | sort -r | xargs rmdir 2> /dev/null
-      rm -f /var/lock /var/run
-      rmdir /var
+      if [ "x$usesystemindex" = "xyes" ]
+      then
+        mkdir -p /Data
+        [ ! -d "/Data/Variable" ] && mv /var /Data/Variable || cp -R /var/* /Data/Variable/
+      else
+        mkdir -p /System
+        [ ! -d "/System/Variable" ] && mv /var /System/Variable || cp -R /var/* /System/Variable/
+      fi
+      rm -rf /var
       rm -f /usr/{doc,info,man} /usr/local/{doc,info,man}
       rmdir /usr/local /usr
 
@@ -37,9 +45,9 @@ function Create_Filesystem_Tree() {
    #
    # The GoboLinux directory hierarchy
    #
-   root="$1"
-   superuser="$2"
-   usesystemindex="$3"
+   local root="$1"
+   local superuser="$2"
+   local usesystemindex="$3"
 
    if [ "$usesystemindex" ]
    then
@@ -215,5 +223,5 @@ function Create_Device_Nodes() {
    create_node urandom c 1 9
 }
 
-Undo_Legacy_Tree
+Undo_Legacy_Tree "yes"
 Create_Filesystem_Tree "/" "root" "yes"

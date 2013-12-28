@@ -1,0 +1,22 @@
+Install help2man in the chroot environment
+
+
+Install Qt and PyQT to get rid of the following errors:
+	Building Manager/20131228-SVN
+	/bin/sh: pyuic: command not found
+
+	Building LiveCD/20131228-SVN
+	make: *** [language] Error 127
+
+	rmdir: failed to remove ‘lib/python2.7/site-packages’: No such file or directory
+	Makefile:28: recipe for target 'clean' failed
+	make: *** [clean] Error 1
+	make: Leaving directory '/Programs/Installer/20131228-SVN'
+
+
+=> SquashFS stage started
+Unionfs mounting layers.
+/bin/ldconfig: Can't create temporary cache file /etc/ld.so.cache~: Permission denied
+
+
+

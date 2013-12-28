@@ -366,14 +366,14 @@ main(int argc, char **argv)
 	setenv("errorFD",   "2", 1);
 	setenv("scriptName", argv[0], 1);
 
-    if (argc < 2) {
+    if (optind >= argc) {
         fprintf(stderr, "Argument missing: specify the program name or directory.\n");
         exit(EXIT_FAILURE);
     }
     
-    program_name = argv[1];
-    if (argc > 2)
-        program_version = argv[2];
+    program_name = argv[optind++];
+    if (optind < argc)
+        program_version = argv[optind++];
 	else {
 		program_version = guess_last_version(program_name);
 		if (! program_version) {

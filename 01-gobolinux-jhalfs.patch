@@ -1,6 +1,50 @@
+Index: install-blfs-tools.sh
+===================================================================
+--- install-blfs-tools.sh	(revision 3771)
++++ install-blfs-tools.sh	(working copy)
+@@ -53,7 +53,7 @@
+ 
+ COMMON_DIR="common"
+ BLFS_TOOL='y'
+-BUILDDIR=$(cd ~;pwd)
++BUILDDIR="/Data/ChrootCompile/WorkDirectory/RootFS"
+ BLFS_ROOT="${BLFS_ROOT:=/blfs_root}"
+ TRACKING_DIR="${TRACKING_DIR:=/var/lib/jhalfs/BLFS}"
+ 
+@@ -109,6 +109,9 @@
+ mkdir -p $TRACKING_DIR
+ [[ $VERBOSITY > 0 ]] && echo "... OK"
+ 
++# Replace the default configuration file with the Gobo-ALFS one.
++cp configuration.blfs ${BUILDDIR}${BLFS_ROOT}/configuration
++
+ [[ $VERBOSITY > 0 ]] && echo -n "Downloading and validating the book (may take some time)"
+ make -j1 -C $BUILDDIR$BLFS_ROOT TRACKING_DIR=$TRACKING_DIR \
+     $BUILDDIR$BLFS_ROOT/packages.xml
+Index: jhalfs
+===================================================================
+--- jhalfs	(revision 3771)
++++ jhalfs	(working copy)
+@@ -416,6 +416,16 @@
+ 
+ # Download or updates the book source
+   get_book
++  BOOK_PATCH_FILE=$CWD/custom/02-gobolinux-book.patch
++  DEVTREE=$JHALFSDIR/lfs-development
++  if [ -d "$DEVTREE" -a ! -e "$DEVTREE/.patched-gobolinux" ]
++  then
++      pushd "$DEVTREE" >& /dev/null
++      echo "Applying patch $BOOK_PATCH_FILE to $PWD"
++      patch -i "$BOOK_PATCH_FILE" -p0
++      touch .patched-gobolinux
++      popd >& /dev/null
++  fi
+   extract_commands
+   echo "${SD_BORDER}${nl_}"
+ 
 Index: common/libs/func_wrt_Makefile
 ===================================================================
---- common/libs/func_wrt_Makefile	(revision 3762)
+--- common/libs/func_wrt_Makefile	(revision 3771)
 +++ common/libs/func_wrt_Makefile	(working copy)
 @@ -110,6 +110,8 @@
           ;;
@@ -11,617 +55,76 @@ Index: common/libs/func_wrt_Makefile
       *)  echo $(grep "^$script_name[_-][[:digit:]]" $JHALFSDIR/pkg_tarball_list | head -n1 )
           ;;
     esac
-Index: install-blfs-tools.sh
+Index: BLFS/gen_pkg_book.sh
 ===================================================================
---- install-blfs-tools.sh	(revision 3762)
-+++ install-blfs-tools.sh	(working copy)
-@@ -83,6 +83,18 @@
-     ${BUILDDIR}${BLFS_ROOT}/{Makefile,gen-makefile.sh}
- [[ $VERBOSITY > 0 ]] && echo "... OK"
+--- BLFS/gen_pkg_book.sh	(revision 3771)
++++ BLFS/gen_pkg_book.sh	(working copy)
+@@ -121,6 +121,11 @@
+ source ${LibDir}/func_dependencies
+ [[ $? > 0 ]] && echo -e "\n\tERROR: func_dependencies did not load..\n" && exit
  
-+cat << EOF > ${BUILDDIR}${BLFS_ROOT}/configuration
-+MENU_general=y
-+MENU_general-genlib=y
-+CONFIG_expat=y
-+CONFIG_libffi=y
-+MENU_general-prog=y
-+CONFIG_python2=y
-+DEPLVL_1=y
-+optDependency=1
-+SUDO=y
-+EOF
++#---------------------
++# GoboLinux fixes
++source ${LibDir}/gobolinux_patch_buildscript
++[[ $? > 0 ]] && echo -e "\n\tERROR: gobolinux_patch_buildscript did not load..\n" && exit
 +
- [[ $VERBOSITY > 0 ]] && echo -n "Downloading and validating the book (may take some time)"
- make -j1 -C $BUILDDIR$BLFS_ROOT TRACKING_DIR=$TRACKING_DIR \
-     $BUILDDIR$BLFS_ROOT/packages.xml
-Index: pkgmngt/packInstall-gobolinux.sh
-===================================================================
---- pkgmngt/packInstall-gobolinux.sh	(revision 0)
-+++ pkgmngt/packInstall-gobolinux.sh	(revision 0)
-@@ -0,0 +1,116 @@
-+# $Id: packInstall.sh.template 3561 2012-02-19 10:54:17Z pierre $
-+# function for packing and installing a tree. We only have access
-+# to variables PKGDIR and PKG_DEST
-+# Other variables can be passed on the command line, or in the environment
-+
-+packInstall() {
-+
-+# A proposed implementation for versions and package names.
-+local PCKGVRS=$(basename $PKGDIR)
-+local TGTPKG=$(basename $PKG_DEST)
-+local PACKAGE=$(echo ${TGTPKG} | sed 's/^[0-9]\{3\}-//' |
-+           sed 's/^[0-9]\{1\}-//')
-+
-+# version is only accessible from PKGDIR name. Since the format of the
-+# name is not normalized, several hacks are necessary...
-+case $PCKGVRS in
-+  expect*|tcl*) local VERSION=$(echo $PCKGVRS | sed 's/^[^0-9]*//') ;;
-+  vim*|unzip*) local VERSION=$(echo $PCKGVRS | sed 's/^[^0-9]*\([0-9]\)\([0-9]\)/\1.\2/') ;;
-+  tidy*) local VERSION=$(echo $PCKGVRS | sed 's/^[^0-9]*\([0-9]*\)/\1cvs/') ;;
-+  docbook-xml) local VERSION=4.5 ;;
-+  *) local VERSION=$(echo ${PCKGVRS} | sed 's/^.*[-_]\([0-9]\)/\1/');;
-+esac
-+
-+#echo "PKGDIR is:   $PKGDIR"
-+#echo "PKG_DEST is: $PKG_DEST"
-+#echo "Package is:  $PACKAGE"
-+#echo "Version is:  $VERSION"
-+#echo "Arch is:     $ARCH"
-+#echo "PWD is:      $PWD"
-+
-+# Guess GoboLinux package name
-+local pkgnames="$(cat /tools/etc/GoboLinux_PackageNames.txt)"
-+local appName="$PACKAGE"
-+case "${appName}" in
-+  kernfs|chroot|creatingdirs|createfiles|adjusting|strippingagain|revisedchroot)
-+    # No GoboLinux hooks are invoked for these.
-+    appName="" ;;
-+  gobolinux)
-+    # We don't want to install this package. It will be later replaced by Compile+Scripts.
-+    return 0 ;;
-+  pkg-config)
-+    appName="pkgconfig" ;;
-+  *) ;;
-+esac
-+if [ ! -z "${appName}" ]
-+then
-+  appName=$(echo "${pkgnames}" | grep -i "^${appName}$" | head -n 1)
-+  [ "$PACKAGE" = "libpipeline" ] && appName="LibPipeline"   # XXX: temporary workaround until recipe is in the store
-+  [ "$PACKAGE" = "procps-ng" ]   && appName="Procps-NG"     # XXX: temporary workaround until recipe is in the store
-+  [ "$PACKAGE" = "bootscripts" ] && appName="BootScripts-ALFS"
-+  [ -z "${appName}" ] && echo "GoboLinux: Warning: $PACKAGE is not a known package name in GoboLinux" >&2 && appName="$PACKAGE"
-+fi
-+
-+pushd $PKG_DEST
-+rm -fv ./usr/share/info/dir  # recommended since this directory is already there
-+                             # on the system
-+
-+# Move files to destination directory
-+local target="/Programs/$appName/$VERSION"
-+mkdir -p "$target/Resources/Defaults/Settings"
-+
-+if [ -d "./usr" ]
-+then 
-+    cp -Ra usr/* "$target/"
-+    rm -rf usr
-+fi
-+
-+if [ -d "./etc" ]
-+then 
-+    cp -Ra etc/* "$target/Resources/Defaults/Settings/"
-+    rm -rf etc
-+fi
-+
-+if [ $(ls | wc -l | awk {'print $1'}) -gt 0 ]
-+then 
-+    cp -Ra * "$target/"
-+    rm -rf *
-+fi
-+
-+if [ -d "$target/etc" ]
-+then
-+    # Could happen if we have both /etc and /usr/etc (who knows..)
-+    cp -R "$target/etc/*" "$target/Resources/Defaults/Settings/"
-+    rm -rf "$target/etc"
-+fi
-+
-+if [ $(ls "$target/Resources/Defaults/Settings/" | wc -l | awk {'print $1'}) -gt 0 ]
-+then
-+    if [ ! -d "$target/../Settings" ]
-+    then
-+        mkdir "$target/../Settings"
-+        cp -R "$target/Resources/Defaults/Settings/"* "$target/../Settings/"
-+    fi
-+fi
-+
-+# Fix broken links in $target
-+pushd "$target"
-+FindBroken $(find .) | while read linkname
-+do
-+    mydir=$(basename $(dirname "$linkname"))
-+    broken=$(readlink $linkname)
-+    if echo "$broken" | grep -q "../../$mydir"
-+    then ln -sf "$(basename $broken)" "$linkname"
-+    elif echo "$broken" | grep -q "../usr/"
-+    then ln -sf "$(echo $broken | sed 's,/usr/,/,g')" "$linkname"
-+    fi
-+done
-+popd
-+
-+# Symlink on LFS
-+/tools/bin/SymlinkProgram "$appName" "$VERSION"
-+
-+popd                         # Since the $PKG_DEST directory is destroyed
-+                             # immediately after the return of the function,
-+                             # getting back to $PKGDIR is important...
-+}
-Index: pkgmngt/packageManager.xml
-===================================================================
---- pkgmngt/packageManager.xml	(revision 3762)
-+++ pkgmngt/packageManager.xml	(working copy)
-@@ -1,342 +1 @@
--﻿<?xml version="1.0" encoding="UTF-8"?>
--<!-- $Id$ -->
--<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
--  "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
--<!ENTITY buildtime "Approximate build time">
--<!ENTITY diskspace "Required disk space">
--<!ENTITY dependencies "Installation depends on">
--<!ENTITY testsuites "Test suite depends on">
--<!ENTITY before "Must be installed before">
--<!ENTITY external "Optional dependencies">
--<!ENTITY debian-pool "http://ftp2.fr.debian.org/debian/pool/main/">
--<!ENTITY dpkg-version "1.16.1.2">
--<!ENTITY dpkg-size "5,236 KB">
--<!ENTITY dpkg-url "&debian-pool;d/dpkg/dpkg_&dpkg-version;.tar.bz2">
--<!ENTITY dpkg-md5 "068ae5e650e54968230de19d6c4e2241">
--<!ENTITY dpkg-home "http://wiki.debian.org/Teams/Dpkg">
--<!ENTITY dpkg-ch5-du "5 MB">
--<!ENTITY dpkg-ch5-sbu "0.4 SBU">
--<!ENTITY dpkg-ch6-du "5 MB">
--<!ENTITY dpkg-ch6-sbu "0.4 SBU">
--]>
--<article>
--
--<sect1 id="package">
--  <?dbhtml filename="packages.html"?>
--
--  <title>All Packages</title>
--
--  <para>Download or otherwise obtain the following packages:</para>
--
--  <variablelist role="materials">
--
--    <varlistentry>
--      <term>Dpkg (&dpkg-version;) - <token>&dpkg-size;</token>:</term>
--      <listitem>
--        <para>Home page: <ulink url="&dpkg-home;"/></para>
--        <para>Download: <ulink url="&dpkg-url;"/></para>
--        <para>MD5 sum: <literal>&dpkg-md5;</literal></para>
--      </listitem>
--    </varlistentry>
--
--  </variablelist>
--
--</sect1>
--<!-- If needed, uncomment and edit this:
--<sect1 id="patches">
--  <?dbhtml filename="patches.html"?>
--
--  <title>Needed Patches</title>
--
--  <para>In addition to the package(s), zero or more patches are also required.
--  These patches correct any mistakes in the packages that should be
--  fixed by the maintainer.  The patches also make small modifications to
--  make the packages easier to work with. The following patches will be
--  needed to build an LFS system:</para>
--
--  <variablelist role="materials">
--
--    <varlistentry>
--      <term>Dpkg Some Patch - <token>&dpkg-somepatche-size;</token>:</term>
--      <listitem>
--        <para>Download: <ulink url="&somepatch-url;"/></para>
--        <para>MD5 sum: <literal>&somepatch-md5;</literal></para>
--      </listitem>
--    </varlistentry>
--
--  </variablelist>
--
--</sect1>
---->
--
--<sect1 id="ch-tools-pkgmngt" role="wrap">
--  <?dbhtml filename="dpkg.html"?>
--
--  <sect1info condition="script">
--    <productname>dpkg</productname>
--    <productnumber>&dpkg-version;</productnumber>
--    <address>&dpkg-url;</address>
--  </sect1info>
--
--  <title>Dpkg-&dpkg-version;</title>
--
--  <sect2 role="package">
--    <title/>
--
--    <para>This is my choice of package manager. Dpkg is the basic package
--    manager of Debian. It can be complemented by deselect (in the same
--    package), apt or aptitude. We use it in a very crude way.</para>
--    
--    <segmentedlist>
--      <segtitle>&buildtime;</segtitle>
--      <segtitle>&diskspace;</segtitle>
--
--      <seglistitem>
--        <seg>&dpkg-ch5-sbu;</seg>
--        <seg>&dpkg-ch5-du;</seg>
--      </seglistitem>
--    </segmentedlist>
--
--  </sect2>
--
--  <sect2 role="installation">
--    <title>Installation of Dpkg</title>
--
--    <para>Since Debian is shipping its own package, all patches have already
--    been applied. However, the <command>configure</command> script calls
--    <command>dpkg</command> itself, which is found only on Debian hosts. The
--    following <command>sed</command> command prevents that call:</para>
--
--    <screen><userinput remap="pre">sed '/\$v[{]DEB_BUILD/d' \
--          -i scripts/dpkg-architecture.pl</userinput></screen>
--
--    <para> Configure the package:</para>
--
--    <screen><userinput remap="configure">./configure --prefix=/tools \
--    --disable-nls --without-dselect \
--    --without-start-stop-daemon \
--    --without-update-alternatives \
--    --without-install-info \
--    --without-zlib --with-bz2=static --without-selinux</userinput></screen>
--
--    <variablelist>
--      <title>The meaning of the configure options:</title>
--
--      <varlistentry>
--        <term><parameter>--without-dselect</parameter></term>
--        <listitem>
--          <para>Avoids building <command>dselect</command>, an
--          awful thing!</para>
--        </listitem>
--      </varlistentry>
--
--      <varlistentry>
--        <term><parameter>--without-start-stop-daemon</parameter></term>
--        <listitem>
--          <para>The utility <command>start-stop-daemon</command>
--          is not needed here.</para>
--        </listitem>
--      </varlistentry>
--
--      <varlistentry>
--        <term><parameter>--without-update-alternatives</parameter></term>
--        <listitem>
--          <para>Same for <command>update-alternatives</command>.</para>
--        </listitem>
--      </varlistentry>
--
--      <varlistentry>
--        <term><parameter>--without-install-info</parameter></term>
--        <listitem>
--          <para>Debian <command>install-info</command> is a wrapper to
--          <command>install-info</command> installed by Texinfo. Not
--          needed either.</para>
--        </listitem>
--      </varlistentry>
--
--    </variablelist>
--
--    <para>Compile the package:</para>
--
--    <screen><userinput remap="make">(cd lib  &amp;&amp; make)
--(cd src &amp;&amp; make)
--(cd dpkg-deb &amp;&amp; make)
--(cd dpkg-split &amp;&amp; make)</userinput></screen>
--
--    <para>This package does not come with a test suite.</para>
--
--    <para>Install only the needed files:</para>
--
--    <screen><userinput remap="install">cp src/dpkg src/dpkg-* /tools/bin
--cp dpkg-deb/dpkg-deb /tools/bin
--cp dpkg-split/dpkg-split /tools/bin
--mkdir -pv /tools/etc/dpkg/{,dpkg.cfg.d}
--cp debian/dpkg.cfg /tools/etc/dpkg</userinput></screen>
--
--    <para>Add a line in <filename>dpkg.cfg</filename> to
--    tell where to put administration files</para>
--
--    <screen><userinput>cat &gt;&gt; /tools/etc/dpkg/dpkg.cfg &lt;&lt; EOF
--# admindir on LFS system
--admindir /var/lib/dpkg
--EOF</userinput></screen>
--
--    <para>On a Debian system, <command>dpkg</command> relies on two other
--    files to be present. Since we do not install them, issue:</para>
--
--    <screen><userinput>cat &gt;&gt; /tools/etc/dpkg/dpkg.cfg &lt;&lt; EOF
--# disable fatal error on path checking
--force-bad-path
--EOF</userinput></screen>
--
--  </sect2>
--
--</sect1>
--
--<sect1 id="ch-pkgmngt-creatingdirs">
--  <?dbhtml filename="creatingdirs.html"?>
--
--  <title>Adding Directories for package management</title>
--
--  <para>Those directories should be added to the system.
--  <filename>/var/lib/dpkg</filename> and subdirectories are
--  adminitrative directories of <command>dpkg</command>.
--  <filename>/var/log</filename> is the log directory for
--  <command>dpkg</command>. <filename>/var/lib/packages</filename>
--  will be used to store our packages.deb files.</para>
--
--  <screen><userinput>mkdir -pv /var/{log,lib/dpkg/{info,updates}}
--mkdir -pv /var/lib/packages</userinput></screen>
--
--</sect1>
--
--<sect1 id="ch-pkgmngt-createfiles">
--  <?dbhtml filename="createfiles.html"?>
--
--  <title>Adding administrative files for Dpkg</title>
--  <para><command>dpkg</command> needs that some files exist to run
--  for the first time. The log file must exist in order to be
--  used.</para>
--
--  <screen><userinput>touch /var/lib/dpkg/{available,status}
--touch /var/log/dpkg.log</userinput></screen>
--
--</sect1>
--
--<sect1 id="ch-system-pkgmngt" role="wrap">
--  <?dbhtml filename="dpkg.html"?>
--
--  <sect1info condition="script">
--    <productname>dpkg</productname>
--    <productnumber>&dpkg-version;</productnumber>
--    <address>&dpkg-url;</address>
--  </sect1info>
--
--  <title>Dpkg-&dpkg-version;</title>
--
--  <sect2 role="package">
--    <title/>
--
--    <para>This is my choice of package manager. Dpkg is the basic package
--    manager of Debian. It can be complemented by deselect (in the same
--    package), apt or aptitude. We use it in a very crude way.</para>
--    
--    <segmentedlist>
--      <segtitle>&buildtime;</segtitle>
--      <segtitle>&diskspace;</segtitle>
--
--      <seglistitem>
--        <seg>&dpkg-ch6-sbu;</seg>
--        <seg>&dpkg-ch6-du;</seg>
--      </seglistitem>
--    </segmentedlist>
--
--  </sect2>
--
--  <sect2 role="installation">
--    <title>Installation of Dpkg</title>
--
--    <para>Since Debian is shipping its own package, all patches have already
--    been applied. We can go directly to configuring it:</para>
--
--    <screen><userinput remap="configure">./configure --prefix=/usr \
--        --sysconfdir=/etc \
--        --localstatedir=/var \
--        --without-dselect \
--        --without-start-stop-daemon \
--        --without-update-alternatives \
--        --without-install-info \
--        --without-selinux</userinput></screen>
--
--    <variablelist>
--      <title>The meaning of the configure options:</title>
--
--      <varlistentry>
--        <term><parameter>--without-dselect</parameter></term>
--        <listitem>
--          <para>Avoids building <command>dselect</command>, an
--          awful thing!</para>
--        </listitem>
--      </varlistentry>
--
--      <varlistentry>
--        <term><parameter>--without-start-stop-daemon</parameter></term>
--        <listitem>
--          <para>The utility <command>start-stop-daemon</command>
--          is not needed here.</para>
--        </listitem>
--      </varlistentry>
--
--      <varlistentry>
--        <term><parameter>--without-update-alternatives</parameter></term>
--        <listitem>
--          <para>Same for <command>update-alternatives</command>.</para>
--        </listitem>
--      </varlistentry>
--
--      <varlistentry>
--        <term><parameter>--without-install-info</parameter></term>
--        <listitem>
--          <para>Debian <command>install-info</command> is a wrapper to
--          <command>install-info</command> installed by Texinfo. Not
--          needed either.</para>
--        </listitem>
--      </varlistentry>
--
--    </variablelist>
--
--    <para>Compile the package:</para>
--
--<screen><userinput remap="make">make</userinput></screen>
--
--    <para>This package does not come with a test suite.</para>
--
--    <para>Install the package:</para>
--
--<screen><userinput remap="install">mkdir -pv $PKG_DEST
--make DESTDIR=$PKG_DEST install
--mkdir -pv $PKG_DEST/etc/dpkg/{,dpkg.cfg.d}
--cp debian/dpkg.cfg $PKG_DEST/etc/dpkg</userinput></screen>
--
--    <para>Add a line in <filename>dpkg.cfg</filename> to
--    tell where to put administration files</para>
--
--<screen><userinput remap="install">cat &gt;&gt; $PKG_DEST/etc/dpkg/dpkg.cfg &lt;&lt; EOF
--# admindir on LFS system
--admindir /var/lib/dpkg
--EOF</userinput></screen>
--
--<!-- Is this needed in chapter 06 -->
--    <para>On a Debian system, <command>dpkg</command> relies on two other
--    files (<command>ldconfig</command> and maybe <command>update-rc.d</command>)
--    to be present. Since we do not install them, issue:</para>
--
--<screen><userinput>cat &gt;&gt; /etc/dpkg/dpkg.cfg &lt;&lt; EOF
--# disable fatal error on path checking
--force-bad-path
--EOF</userinput></screen>
--
--  </sect2>
--
--</sect1>
--</article>
-+link packageManager-gobolinux.xml
-\ No newline at end of file
-Index: pkgmngt/packageManager-gobolinux.xml
-===================================================================
---- pkgmngt/packageManager-gobolinux.xml	(revision 0)
-+++ pkgmngt/packageManager-gobolinux.xml	(revision 0)
-@@ -0,0 +1,51 @@
-+<?xml version="1.0" encoding="UTF-8"?>
-+<!-- $Id: packageManager.xml 3561 2012-02-19 10:54:17Z pierre $ -->
-+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-+  "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-+<!ENTITY gobolinux-repository "http://127.0.0.1/">
-+<!ENTITY bootstrap-url "&gobolinux-repository;gobolinux_alfs-1.0.tar.gz">
-+<!ENTITY bootstrap-md5 "99ecebc19e8e6588b8f1e1e6aa576233">
-+]>
-+
-+<article>
-+
-+<sect1 id="package">
-+        <para>Download: <ulink url="&bootstrap-url;"/></para>
-+        <para>MD5 sum: <literal>&bootstrap-md5;</literal></para>
-+</sect1>
-+
-+<sect1 id="ch-tools-pkgmngt" role="wrap">
-+  <?dbhtml filename="gobolinux.html"?>
-+  <sect2 role="installation">
-+      <screen><userinput remap="pre"></userinput></screen>
-+      <screen><userinput remap="configure"></userinput></screen>
-+      <screen><userinput remap="make">make</userinput></screen>
-+      <screen><userinput remap="install">make install</userinput></screen>
-+  </sect2>
-+</sect1>
-+
-+<sect1 id="ch-pkgmngt-creatingdirs">
-+    <screen><userinput>/tools/bin/CreateGoboLinuxTree
-+for dir in arpa bits gnu net netash netatalk netax25 neteconet netinet netipx netiucv netpacket netrom netrose nfs protocols rpc rpcsvc scsi sys; do mkdir -p /usr/include/$dir; done
-+    </userinput></screen>
-+</sect1>
-+
-+<sect1 id="ch-pkgmngt-createfiles">
-+    <screen><userinput></userinput></screen>
-+</sect1>
-+
-+<sect1 id="ch-system-pkgmngt" role="wrap">
-+  <?dbhtml filename="gobolinux.html"?>
-+
-+  <sect2 role="installation">
-+      <screen><userinput remap="make"></userinput></screen>
-+
-+      <!-- Those instructions are executed with PKG_DEST set. They are not processed
-+      in any way to add $PKG_DEST at some place, and the PKG_DEST directory is not
-+      populated before, so it is basically empty. You have thus to create any directory
-+      needed in $PKG_DEST and not otherwise created by the make install command. -->
-+      <screen><userinput remap="install"></userinput></screen>
-+  </sect2>
-+
-+</sect1>
-+</article>
-Index: pkgmngt/packInstall.sh
-===================================================================
---- pkgmngt/packInstall.sh	(revision 3762)
-+++ pkgmngt/packInstall.sh	(working copy)
-@@ -1,38 +1 @@
--# $Id$
--# function for packing and installing a tree. We only have access
--# to variables PKGDIR and PKG_DEST
--
--packInstall() {
--
--local PCKGVRS=$(basename $PKGDIR)
--local TGTPKG=$(basename $PKG_DEST)
--local PACKAGE=$(echo ${TGTPKG} | sed 's/^[0-9]\{3\}-//' |
--           sed 's/^[0-9]\{1\}-//')
--case $PCKGVRS in
--  expect*|tcl*) local VERSION=$(echo $PCKGVRS | sed 's/^[^0-9]*//') ;;
--  vim*|unzip*) local VERSION=$(echo $PCKGVRS | sed 's/^[^0-9]*\([0-9]\)\([0-9]\)/\1.\2/') ;;
--  tidy*) local VERSION=$(echo $PCKGVRS | sed 's/^[^0-9]*\([0-9]*\)/\1cvs/') ;;
--  docbook-xml) local VERSION=4.5 ;;
--  *) local VERSION=$(echo ${PCKGVRS} | sed 's/^.*-\([0-9]\)/\1/');;
--esac
--local ARCHIVE_NAME=$(dirname ${PKGDIR})/${PACKAGE}_${VERSION}.deb
--case $(uname -m) in
--  x86_64) local ARCH=amd64 ;;
--  *) local ARCH=i386 ;;
--esac
--
--pushd $PKG_DEST
--rm -fv ./usr/share/info/dir
--mkdir DEBIAN
--cat > DEBIAN/control <<EOF
--Package: $PACKAGE
--Version: $VERSION
--Maintainer: Pierre Labastie <lnimbus@club-internet.fr>
--Description: $PACKAGE
--Architecture: $ARCH
--EOF
--dpkg-deb -b . $ARCHIVE_NAME
--dpkg -i $ARCHIVE_NAME
--mv -v $ARCHIVE_NAME /var/lib/packages
--popd
--}
-+link packInstall-gobolinux.sh
-\ No newline at end of file
-Index: jhalfs
-===================================================================
---- jhalfs	(revision 3762)
-+++ jhalfs	(working copy)
-@@ -409,6 +409,15 @@
+ #------- MAIN --------
+ if [[ ! -f ${PackFile} ]] ; then
+   echo -e "\tNo packages file has been found.\n"
+@@ -183,4 +188,7 @@
+ chmod -R +x scripts
+ echo -e "done\n"
  
- # Download or updates the book source
-   get_book
-+  BOOK_PATCH_FILE=$PWD/custom/02-gobolinux-book.patch
-+  DEVTREE=$JHALFSDIR/lfs-development
-+  if [ -d "$DEVTREE" -a ! -e "$DEVTREE/.patched-gobolinux" ]
-+  then
-+      pushd "$DEVTREE" >& /dev/null
-+      patch -i "$BOOK_PATCH_FILE" -p0
-+      touch .patched-gobolinux
-+      popd >& /dev/null
-+  fi
-   extract_commands
-   echo "${SD_BORDER}${nl_}"
- 
++# Patch the scripts
++for i in ./scripts/*; do PatchBLFSScript "$i"; done
++
+ #clean_configuration
+Index: BLFS/xsl/scripts.xsl
+===================================================================
+--- BLFS/xsl/scripts.xsl	(revision 3771)
++++ BLFS/xsl/scripts.xsl	(working copy)
+@@ -265,7 +265,7 @@
+           </xsl:choose>
+           <xsl:if test="not(contains(string(parent::listitem/following-sibling::listitem[1]/para),'FTP'))">
+             <xsl:text>
+-    cp $PACKAGE $SRC_ARCHIVE
++    if [ ! -z "$SRC_ARCHIVE" ]; then cp $PACKAGE $SRC_ARCHIVE; fi
+   fi
+ fi
+ </xsl:text>
+@@ -279,7 +279,7 @@
+           <xsl:value-of select="ulink/@url"/>
+         </xsl:if>
+         <xsl:text>
+-    cp $PACKAGE $SRC_ARCHIVE
++    if [ ! -z "$SRC_ARCHIVE" ]; then cp $PACKAGE $SRC_ARCHIVE; fi
+   fi
+ fi
+ </xsl:text>
+@@ -323,7 +323,7 @@
+         <xsl:value-of select="ulink/@url"/>
+         <xsl:text>&#xA;</xsl:text>
+         <xsl:text>
+-    cp $PATCH $SRC_ARCHIVE
++    if [ ! -z "$SRC_ARCHIVE" ]; then cp $PATCH $SRC_ARCHIVE; fi
+   fi
+ fi
+ </xsl:text>
+@@ -355,7 +355,7 @@
+           <xsl:text> || \&#xA;    wget -T 30 -t 5 </xsl:text>
+           <xsl:value-of select="ulink/@url"/>
+           <xsl:text>
+-    cp $PACKAGE1 $SRC_ARCHIVE
++    if [ ! -z "$SRC_ARCHIVE" ]; then cp $PACKAGE1 $SRC_ARCHIVE; fi
+   fi
+ fi
+ </xsl:text>
+@@ -440,7 +440,7 @@
+     cp $SRC_ARCHIVE/$BOOTPACKG $BOOTPACKG
+   else
+     wget -T 30 -t 5 $URL
+-    cp $BOOTPACKG $SRC_ARCHIVE
++    if [ ! -z "$SRC_ARCHIVE" ]; then cp $BOOTPACKG $SRC_ARCHIVE; fi
+   fi
+   rm -f unpacked
+ fi
