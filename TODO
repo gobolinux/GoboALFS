@@ -1,4 +1,8 @@
-Install help2man in the chroot environment
+
+-> keep modifying the UpdateEnvironment script
+-> to test:
+   cd /Data/ChrootCompile/WorkDirectory/ISO
+   livecdDataDir=../BuildLiveCD/Data ../BuildLiveCD/bin/UpdateEnvironment
 
 
 Install Qt and PyQT to get rid of the following errors:
@@ -18,5 +22,16 @@ Install Qt and PyQT to get rid of the following errors:
 Unionfs mounting layers.
 /bin/ldconfig: Can't create temporary cache file /etc/ld.so.cache~: Permission denied
 
+InitRD:
+    UnionFS package
+
+Final kernel:
+	CONFIG_RAMFS=y
+	CONFIG_CRAMFS=y
+	CONFIG_ISO9660_FS=y
+	CONFIG_BLK_DEV_LOOP=y
+	CONFIG_BLK_DEV_LOOP_MIN_COUNT=0
 
 
+### Remember: we do not use UnionFS to build packages with 015. FiboSandbox is the only method
+### supported by now.

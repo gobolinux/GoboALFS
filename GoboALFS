@@ -160,7 +160,7 @@ MoveFile lib/locale Glibc
 MoveFile share/zoneinfo Glibc
 
 ###
-### Update /etc/passwd and /etc/group
+### Update /etc/passwd, /etc/group and /etc/resolv.conf
 ###
 
 if ! grep -q "^fibo:" "$BUILDDIR/System/Index/etc/passwd"
@@ -171,6 +171,12 @@ fi
 if ! grep -q "^`whoami`:" "$BUILDDIR/System/Index/etc/passwd"
 then
     grep "^`whoami`:" /etc/passwd | sudo tee -a "$BUILDDIR/System/Index/etc/passwd" > /dev/null
+fi
+if grep -q "EDITME" "$BUILDDIR/System/Index/etc/resolv.conf"
+then
+    sudo rm -f "$BUILDDIR/System/Index/etc/resolv.conf"
+    echo nameserver 208.67.222.222 | sudo tee -a "$BUILDDIR/System/Index/etc/resolv.conf" > /dev/null
+    echo nameserver 208.67.220.220 | sudo tee -a "$BUILDDIR/System/Index/etc/resolv.conf" > /dev/null
 fi
 
 ###
@@ -214,6 +220,12 @@ function CreateGoboPackage() {
     local appName="$1"
     appVersion=$(ls "$appName/" | grep -v "Settings\|Current")
     packageName="$PACKAGEDIR/$appName--$appVersion-r0--$(uname -m).tar.bz2"
+    if [ "$appName" = "Compile" -o "$appName" = "Scripts" ]
+    then
+        # BuildLiveCD will create packages for those
+        echo "Skipping package $appName -- BuildLiveCD will take care of it"
+        return
+    fi
     if [ ! -e "$packageName" ]
     then
         echo "Creating package for $appName $appVersion"
@@ -233,6 +245,7 @@ function InChroot() {
         sudo mount -o bind /proc "$BUILDDIR/proc"
         sudo mount -o bind /dev "$BUILDDIR/dev"
         export PATH=/bin:/sbin
+        export NO_UNIONFS=yes
         export SUDO_OK=1
 
         sudo rm -f "$BUILDDIR/etc/mtab"
@@ -244,24 +257,6 @@ function InChroot() {
         sudo umount "$BUILDDIR/dev"
         sudo umount "$BUILDDIR/proc"
     )
-}
-
-function DownloadRecipeFiles() {
-    local appName="$1"
-    sudo mkdir -p "$BUILDDIR/Data/Compile/"{Sources,Archives,Recipes}
-    local latestRecipeVersion="$(wget -q http://svn.gobolinux.org/recipes/revisions/${appName}/ -O - | grep href | tail -n1 | cut -d\" -f2 | sed 's,/,,g')"
-    local latestRecipe="http://gobolinux.org/recipe-store/${appName}--${latestRecipeVersion}--recipe.tar.bz2"
-    local target="$BUILDDIR/Data/Compile/Recipes/$(basename $latestRecipe)"
-    if [ ! -e "$target" ]
-    then
-        sudo wget "$latestRecipe" -O "$target"
-    fi
-    if [ ! -d "$BUILDDIR/Data/Compile/Recipes/$appName" ]
-    then
-        sudo tar jxvf "$BUILDDIR/Data/Compile/Recipes/$(basename $latestRecipe)" -C "$BUILDDIR/Data/Compile/Recipes" 
-        local tarball=$(grep "^url=" "$BUILDDIR/Data/Compile/Recipes/${appName}/$latestRecipeVersion/Recipe" | cut -d\" -f2)
-        sudo wget "$tarball" -O "$BUILDDIR/Data/Compile/Archives/$(basename $tarball)"
-    fi
 }
 
 function InstallGoboPackage() {
@@ -310,12 +305,13 @@ then
     popd > /dev/null
 fi
 
-if [ ! -d "$BUILDDIR/Programs/Linux" ]
-then
-    # Compile the kernel
-    DownloadRecipeFiles Linux
-    InChroot Compile --no-sign Linux
-fi
+for appName in Linux Fuse CMake UnionFS-Fuse Help2Man
+do
+    if [ ! -d "$BUILDDIR/Programs/$appName" ]
+    then
+        InChroot Compile --no-sign "$appName"
+    fi
+done
 
 ###
 ### Create packages using plain tar. Please notice the revision number (r0), for there are
