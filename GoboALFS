@@ -280,7 +280,7 @@ if [ ! -d "$WORKDIR/BuildLiveCD" ]
 then
     svn checkout http://svn.gobolinux.org/tools/branches/015/BuildLiveCD "$WORKDIR/BuildLiveCD"
 fi
-
+    
 if [ ! -d "$WORKDIR/ISO/LocalSVN/tools" ]
 then
     # Checkout copies of Scripts and Compile from SVN
@@ -305,7 +305,7 @@ then
     popd > /dev/null
 fi
 
-for appName in Linux Fuse CMake UnionFS-Fuse Help2Man
+for appName in GoboHide Module-Init-Tools Linux Fuse CMake UnionFS-Fuse Help2Man
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
@@ -323,7 +323,6 @@ pushd "$BUILDDIR/Programs" > /dev/null
 for appName in *; do CreateGoboPackage "$appName"; done
 ls > "$WORKDIR/BuildLiveCD/Data/Packages-List-Base"
 popd > /dev/null
-    
 
 if [ ! -d "$WORKDIR/ISO/Output" ]
 then
@@ -337,42 +336,3 @@ then
     )
     popd > /dev/null
 fi
-
-### TODO: make sure the following files are created by the live cd scripts:
-### /etc/fstab 
-### /etc/group
-### /etc/gshadow
-### /etc/hosts
-### /etc/inittab
-### /etc/inputrc
-### /etc/localtime(symlink)
-### /etc/lsb-release(?)
-### /etc/passwd(root, bin, nobody)
-### /etc/profile
-###
-### /Data/Variable/mount/utab (empty)
-### /Data/Variable/log/btmp (empty)
-### /Data/Variable/log/wtmp (empty)
-### /Data/Variable/log/lastlog (empty)
-### ./Data/Variable/cache/ldconfig/ (directory)
-###
-
-### To be able to boot your new system you need to follow
-### the next steps:
-### 
-###         - Mount the virtual kernel file systems.
-### 
-###         - Enter to the chroot using the command found
-###         in the section -Entering the Chroot Environment-
-###         except if building CLFS with METHOD=boot.
-### 
-###         - Set a password for the root user.
-### 
-###         - Edit or create /etc/fstab,
-###                          /etc/hosts,
-###                          /etc/sysconfig/clock,
-###                          /etc/sysconfig/console,
-###                          /etc/sysconfig/network,
-###                          /etc/sysconfig/ifconfig.eth0,
-###                          /etc/resolv.conf
-###         and any other configuration file required to suit your needs.
