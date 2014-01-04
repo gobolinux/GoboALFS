@@ -7,6 +7,7 @@
 # Lucas C. Villa Real <lucasvr@gobolinux.org>
 ################################################################################
 
+source LocalFunctions
 
 if [ $# != 1 ]
 then
@@ -117,39 +118,6 @@ fi
 ### Move left-over files to the packages where they belong
 ###
 
-function MoveSettingsFile() {
-    local settingsFile="$1"
-    local programName="$2"
-    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v Settings)
-    if [ -z "$programVersion" ]
-    then
-        return
-    fi
-    if [ -e "$BUILDDIR/System/Index/etc/$settingsFile" -a ! -h "$BUILDDIR/System/Index/etc/$settingsFile" ]
-    then
-        sudo mkdir -p "$BUILDDIR/Programs/$programName/Settings"
-        sudo mkdir -p "$BUILDDIR/Programs/$programName/$programVersion/Resources/Defaults/Settings"
-        sudo cp -v "$BUILDDIR/System/Index/etc/$settingsFile" "$BUILDDIR/Programs/$programName/Settings"
-        sudo mv -v "$BUILDDIR/System/Index/etc/$settingsFile" "$BUILDDIR/Programs/$programName/$programVersion/Resources/Defaults/Settings"
-        sudo ln -v -s "/Programs/$programName/Settings/$settingsFile" "$BUILDDIR/System/Index/etc/$settingsFile"
-    fi
-}
-
-function MoveFile() {
-    local filename="$1"
-    local programName="$2"
-    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v Settings)
-    if [ -z "$programVersion" ]
-    then
-        return
-    fi
-    if [ -e "$BUILDDIR/System/Index/$filename" -a ! -h "$BUILDDIR/System/Index/$filename" ]
-    then
-        sudo mv -v "$BUILDDIR/System/Index/$filename" "$BUILDDIR/Programs/$programName/$programVersion/$filename"
-        sudo ln -v -s "/Programs/$programName/$programVersion/$filename" "$BUILDDIR/System/Index/$filename"
-    fi
-}
-
 MoveSettingsFile nsswitch.conf Glibc
 MoveSettingsFile udev/hwdb.bin Udev
 MoveSettingsFile inittab BootScripts-ALFS
@@ -163,20 +131,20 @@ MoveFile share/zoneinfo Glibc
 ### Update /etc/passwd, /etc/group and /etc/resolv.conf
 ###
 
-if ! grep -q "^fibo:" "$BUILDDIR/System/Index/etc/passwd"
+if ! grep -q "^fibo:" "$BUILDDIR/System/Settings/passwd"
 then
-    echo "fibo:x:21:21::/tmp:/bin/bash" | sudo tee -a "$BUILDDIR/System/Index/etc/passwd" > /dev/null
-    echo "fibo:x:21:" | sudo tee -a "$BUILDDIR/System/Index/etc/group" > /dev/null
+    echo "fibo:x:21:21::/tmp:/bin/bash" | sudo tee -a "$BUILDDIR/System/Settings/passwd" > /dev/null
+    echo "fibo:x:21:" | sudo tee -a "$BUILDDIR/System/Settings/group" > /dev/null
 fi
-if ! grep -q "^`whoami`:" "$BUILDDIR/System/Index/etc/passwd"
+if ! grep -q "^`whoami`:" "$BUILDDIR/System/Settings/passwd"
 then
-    grep "^`whoami`:" /etc/passwd | sudo tee -a "$BUILDDIR/System/Index/etc/passwd" > /dev/null
+    grep "^`whoami`:" /etc/passwd | sudo tee -a "$BUILDDIR/System/Settings/passwd" > /dev/null
 fi
-if grep -q "EDITME" "$BUILDDIR/System/Index/etc/resolv.conf"
+if grep -q "EDITME" "$BUILDDIR/System/Settings/resolv.conf"
 then
-    sudo rm -f "$BUILDDIR/System/Index/etc/resolv.conf"
-    echo nameserver 208.67.222.222 | sudo tee -a "$BUILDDIR/System/Index/etc/resolv.conf" > /dev/null
-    echo nameserver 208.67.220.220 | sudo tee -a "$BUILDDIR/System/Index/etc/resolv.conf" > /dev/null
+    sudo rm -f "$BUILDDIR/System/Settings/resolv.conf"
+    echo nameserver 208.67.222.222 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
+    echo nameserver 208.67.220.220 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
 fi
 
 ###
@@ -187,7 +155,7 @@ if [ ! -e "$BUILDDIR/bin/sh" ]
 then
     bashVersion=$(ls $BUILDDIR/Programs/Bash | grep -v Settings)
     sudo ln -sf "bash" "$BUILDDIR/Programs/Bash/$bashVersion/bin/sh"
-    sudo ln -sf "/Programs/Bash/$bashVersion/bin/sh" "$BUILDDIR/System/Index/bin/sh"
+    sudo ln -sf "/Programs/Bash/$bashVersion/bin/sh" "$BUILDDIR/System/Links/Executables/sh"
 fi
 
 ###
@@ -216,65 +184,17 @@ fi
 ### Operation -- GoboLinux part of the script
 ###################################################################################################
 
-function CreateGoboPackage() {
-    local appName="$1"
-    appVersion=$(ls "$appName/" | grep -v "Settings\|Current")
-    packageName="$PACKAGEDIR/$appName--$appVersion-r0--$(uname -m).tar.bz2"
-    if [ "$appName" = "Compile" -o "$appName" = "Scripts" ]
-    then
-        # BuildLiveCD will create packages for those
-        echo "Skipping package $appName -- BuildLiveCD will take care of it"
-        return
-    fi
-    if [ ! -e "$packageName" ]
-    then
-        echo "Creating package for $appName $appVersion"
-        sudo find "$appName/$appVersion" -type d -empty | while read line
-        do 
-            sudo rmdir -p $line >& /dev/null
-        done
-        sudo tar cjf "$packageName" "$appName"
-
-        echo "Creating 'Current' link"
-        [ ! -e "$appName/Current" ] && sudo ln -s "$appVersion" "$appName/Current"
-    fi
-}
-
-function InChroot() {
-    (
-        sudo mount -o bind /proc "$BUILDDIR/proc"
-        sudo mount -o bind /dev "$BUILDDIR/dev"
-        export PATH=/bin:/sbin
-        export NO_UNIONFS=yes
-        export SUDO_OK=1
-
-        sudo rm -f "$BUILDDIR/etc/mtab"
-        sudo touch "$BUILDDIR/etc/mtab"
-        sudo chroot "$BUILDDIR" $@
-        
-        sync
-        sleep 1
-        sudo umount "$BUILDDIR/dev"
-        sudo umount "$BUILDDIR/proc"
-    )
-}
-
-function InstallGoboPackage() {
-    local appName="$1"
-    local snapshotDir="$(date +%Y%m%d)-SVN"
-    local packageDir="$BUILDDIR/Programs/$appName/$snapshotDir"
-    sudo mkdir -p "$packageDir"
-    sudo cp -R "$WORKDIR/ISO/LocalSVN/tools/$appName/"* "$packageDir/"
-    sudo ln -s "$snapshotDir" "$BUILDDIR/Programs/$appName/Current"
-    sudo find "$packageDir" -name .svn -type d | xargs sudo rm -rf
-    sudo cp -R "$packageDir/Resources/Defaults/Settings" "$packageDir/.."
-    InChroot make -C "/Programs/$appName/$snapshotDir"
-    InChroot /tools/bin/SymlinkProgram -c overwrite $appName
-}
-
 ###
 ### Checkout GoboLinux scripts
 ###
+
+if [ ! -e "$BUILDDIR/Programs/Perl/Current/Resources/Revision" ]
+then
+    # GoboLinux needs its special Perl package to support /System/Aliens
+    rm -rf "$BUILDDIR/Programs/Perl"
+    # .cpan holds references to /tools, which we don't want to keep.
+    rm -rf "$BUILDDIR/root/.cpan"
+fi
 
 if [ ! -d "$WORKDIR/BuildLiveCD" ]
 then
@@ -302,14 +222,25 @@ then
         sudo mv "$coreutilsDir/bin/install" "$coreutilsDir/bin/real_install"
         InChroot SymlinkProgram CoreUtils "$coreutilsVersion"
     fi
+
+    # Rename LibXML2' xmlcatalog to real_xmlcatalog
+    libxml2Version=$(ls "$BUILDDIR/Programs/LibXML2/" | grep -v "Settings\|Current")
+    libxml2Dir="$BUILDDIR/Programs/LibXML2/$libxml2Version"
+    if [ ! -e "$libxml2Dir/bin/real_xmlcatalog" ]
+    then
+        sudo mv "$libxml2Dir/bin/xmlcatalog" "$libxml2Dir/bin/real_xmlcatalog"
+        InChroot SymlinkProgram LibXML2 "$libxml2Version"
+    fi
+
     popd > /dev/null
 fi
 
-for appName in GoboHide Module-Init-Tools Linux Fuse CMake UnionFS-Fuse Help2Man
+for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
-        InChroot Compile --no-sign "$appName"
+        InChroot Compile --no-sign --symlink=no "$appName"
+        InChroot SymlinkProgram -c overwrite "$appName"
     fi
 done
 

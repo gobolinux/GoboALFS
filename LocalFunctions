@@ -1,0 +1,111 @@
+#!/bin/bash (source)
+
+function MoveSettingsFile() {
+    local settingsFile="$1"
+    local programName="$2"
+    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v Settings)
+    if [ -z "$programVersion" ]
+    then
+        return
+    fi
+    if [ -e "$BUILDDIR/System/Settings/$settingsFile" -a ! -h "$BUILDDIR/System/Settings/$settingsFile" ]
+    then
+        sudo mkdir -p "$BUILDDIR/Programs/$programName/Settings"
+        sudo mkdir -p "$BUILDDIR/Programs/$programName/$programVersion/Resources/Defaults/Settings"
+        sudo cp -v "$BUILDDIR/System/Settings/$settingsFile" "$BUILDDIR/Programs/$programName/Settings"
+        sudo mv -v "$BUILDDIR/System/Settings/$settingsFile" "$BUILDDIR/Programs/$programName/$programVersion/Resources/Defaults/Settings"
+        sudo ln -v -s "/Programs/$programName/Settings/$settingsFile" "$BUILDDIR/System/Settings/$settingsFile"
+    fi
+}
+
+function MoveFile() {
+    local filename="$1"
+    local programName="$2"
+    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v Settings)
+    if [ -z "$programVersion" ]
+    then
+        return
+    fi
+    if [ -e "$BUILDDIR/usr/$filename" -a ! -h "$BUILDDIR/usr/$filename" ]
+    then
+        sudo mv -v "$BUILDDIR/usr/$filename" "$BUILDDIR/Programs/$programName/$programVersion/$filename"
+        sudo ln -v -s "/Programs/$programName/$programVersion/$filename" "$BUILDDIR/usr/$filename"
+    fi
+}
+
+function PopulateResources() {
+    local appName="$1"
+    local output="$2"
+    local version=$(svn list "http://svn.gobolinux.org/recipes/trunk/$appName" 2> /dev/null | tail -n1)
+    local repos="http://svn.gobolinux.org/recipes/trunk/$appName/$version"
+    sudo mkdir -p "$output/Resources"
+    if [ ! -d "$output/Resources/Tasks" ]
+    then
+        sudo svn checkout "$repos/Resources/Tasks" "$output/Resources/Tasks" 2> /dev/null
+    fi
+    if [ ! -e "$output/Resources/Description" ]
+    then
+        sudo svn checkout "$repos/Resources/Description" "$output/Resources/Description" 2> /dev/null
+    fi
+    if [ ! -e "$output/Resources/Dependencies" ]
+    then
+        InChroot Dependencies "$appName" | sudo tee -a "$output/Resources/Dependencies" > /dev/null
+    fi
+    find "$output/Resources" -type d -name ".svn" 2> /dev/null | xargs sudo rm -rf
+}
+
+function CreateGoboPackage() {
+    local appName="$1"
+    appVersion=$(ls "$appName/" | grep -v "Settings\|Current")
+    packageName="$PACKAGEDIR/$appName--$appVersion-r0--$(uname -m).tar.bz2"
+    if [ "$appName" = "Compile" -o "$appName" = "Scripts" ]
+    then
+        # BuildLiveCD will create packages for those
+        echo "Skipping package $appName -- BuildLiveCD will take care of it"
+        return
+    fi
+    if [ ! -e "$packageName" ]
+    then
+        echo "Creating package for $appName $appVersion"
+        PopulateResources "$appName" "$appName/$appVersion"
+        sudo find "$appName/$appVersion" -type d -empty | while read line
+        do 
+            sudo rmdir -p $line >& /dev/null
+        done
+        sudo tar cjf "$packageName" "$appName"
+        # Create the Current link
+        [ ! -e "$appName/Current" ] && sudo ln -s "$appVersion" "$appName/Current"
+    fi
+}
+
+function InChroot() {
+    (
+        sudo mount -o bind /proc "$BUILDDIR/proc"
+        sudo mount -o bind /dev "$BUILDDIR/dev"
+        export PATH=/bin:/sbin
+        export NO_UNIONFS=yes
+        export SUDO_OK=1
+
+        sudo rm -f "$BUILDDIR/etc/mtab"
+        sudo touch "$BUILDDIR/etc/mtab"
+        sudo chroot "$BUILDDIR" $@
+        
+        sync
+        sleep 1
+        sudo umount "$BUILDDIR/dev"
+        sudo umount "$BUILDDIR/proc"
+    )
+}
+
+function InstallGoboPackage() {
+    local appName="$1"
+    local snapshotDir="$(date +%Y%m%d)-SVN"
+    local packageDir="$BUILDDIR/Programs/$appName/$snapshotDir"
+    sudo mkdir -p "$packageDir"
+    sudo cp -R "$WORKDIR/ISO/LocalSVN/tools/$appName/"* "$packageDir/"
+    sudo ln -s "$snapshotDir" "$BUILDDIR/Programs/$appName/Current"
+    sudo find "$packageDir" -name .svn -type d | xargs sudo rm -rf
+    sudo cp -R "$packageDir/Resources/Defaults/Settings" "$packageDir/.."
+    InChroot make -C "/Programs/$appName/$snapshotDir"
+    InChroot /tools/bin/SymlinkProgram -c overwrite $appName
+}
