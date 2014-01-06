@@ -56,8 +56,13 @@ function PopulateResources() {
 
 function CreateGoboPackage() {
     local appName="$1"
-    appVersion=$(ls "$appName/" | grep -v "Settings\|Current")
+    appVersion=$(ls "$appName/" 2> /dev/null | grep -v "Settings\|Current")
     packageName="$PACKAGEDIR/$appName--$appVersion-r0--$(uname -m).tar.bz2"
+    if [ ! -d "$appName/" ]
+    then
+        # Skip
+        return
+    fi
     if [ "$appName" = "Compile" -o "$appName" = "Scripts" ]
     then
         # BuildLiveCD will create packages for those

@@ -7,8 +7,6 @@
 # Lucas C. Villa Real <lucasvr@gobolinux.org>
 ################################################################################
 
-source LocalFunctions
-
 if [ $# != 1 ]
 then
     echo "Usage: $0 <workdir>"
@@ -29,6 +27,10 @@ GOBO_JHALFS_DIR="$SVNDIR/jhalfs"
 ALFS_CONFIGURATION="$SVNDIR/jhalfs/configuration"
 PACKAGEDIR=$WORKDIR/Packages
 BUILDDIR=$WORKDIR/RootFS
+
+# LocalFunctions must be imported after all global definitions have been set
+source $SVNDIR/LocalFunctions
+
 
 ###
 ### Sanity checks
@@ -188,12 +190,12 @@ fi
 ### Checkout GoboLinux scripts
 ###
 
-if [ ! -e "$BUILDDIR/Programs/Perl/Current/Resources/Revision" ]
+if [ ! -e "$BUILDDIR/Programs/Perl/Current/Resources/Description" ]
 then
     # GoboLinux needs its special Perl package to support /System/Aliens
-    rm -rf "$BUILDDIR/Programs/Perl"
+    sudo rm -rf "$BUILDDIR/Programs/Perl"
     # .cpan holds references to /tools, which we don't want to keep.
-    rm -rf "$BUILDDIR/root/.cpan"
+    sudo rm -rf "$BUILDDIR/root/.cpan"
 fi
 
 if [ ! -d "$WORKDIR/BuildLiveCD" ]
@@ -235,12 +237,31 @@ then
     popd > /dev/null
 fi
 
-for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools
+# Compile extra packages needed to run Compile and to boot the ISO nicely
+unset recompileShadow
+for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools Linux-PAM
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
         InChroot Compile --no-sign --symlink=no "$appName"
         InChroot SymlinkProgram -c overwrite "$appName"
+        [ "$appName" = "Linux-PAM" ] && recompileShadow=1
+    fi
+done
+
+# Recompile Shadow with Linux-PAM support
+if [ ! -z "$recompileShadow" ]
+then
+    shadowVersion=$(ls "$BUILDDIR/Programs/Shadow/" | grep -v "Settings\|Current")
+    InChroot Compile --no-sign Shadow $shadowVersion
+fi
+
+# At this point we can build all the extra packages that we want to have in the ISO
+for appName in Xorg
+do
+    if [ ! -d "$BUILDDIR/Programs/$appName" ]
+    then
+        InChroot Compile --no-sign "$appName"
     fi
 done
 
@@ -255,7 +276,7 @@ for appName in *; do CreateGoboPackage "$appName"; done
 ls > "$WORKDIR/BuildLiveCD/Data/Packages-List-Base"
 popd > /dev/null
 
-if [ ! -d "$WORKDIR/ISO/Output" ]
+if [ ! -d "$WORKDIR/ISO/Output/ROLayer" ]
 then
     # Create the ISO
     pushd "$WORKDIR/ISO" > /dev/null
