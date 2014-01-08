@@ -20,28 +20,18 @@ Some packages end up with $target/Shared. We should make $target/Shared -> $targ
 replace Shared with share in Compile.
 
 
-Create Tasks from BootScripts-ALFS/Settings/init.d/*
-
-
-=> SquashFS stage started
-Unionfs mounting layers.
-/bin/ldconfig: Can't create temporary cache file /etc/ld.so.cache~: Permission denied
-
-=> Setting console  font...
+=> Setting console font...
 Cannot open font file /Data/Fonts/Console/lode-lat1u-16.psf.gz
 
-=> Starting Udev...
-/bin/StartLiveCD: line 23: /System/Links/Tasks/Udev: No such file or directory
+=> Launching a debug shell (zsh)...
+/etc/zshrc:bindkey:91: cannot bindto an empt key sequence
+/etc/zshrc:bindkey:92: cannot bind to an empty key seunce
+/etc/zshrc:bindkey:93: cannot bind to an emptykey sequence
+/etc/zshrc:bindkey:94: cannot bind to an empty key sequence
 
-=> Launching the loopback interface...
-/bin/StartLiveCD: line 37: ifconfig: command not found
-mount: /S/K/Status/bus/usb does not exist
-mount: /S/K/Devices/shm does not exist
 
-=> Starting message bus..
-StartTask: MessageBus is not a valid task
-StartTask: HAL is not a valid task
-cat: /S/K/Status/ide/*/model: No such file or directory
+Broken Xorg drivers: modesetting and vesa_drv.
+
 
 Final kernel:
 	CONFIG_RAMFS=y
