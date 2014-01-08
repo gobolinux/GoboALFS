@@ -130,6 +130,20 @@ MoveFile lib/locale Glibc
 MoveFile share/zoneinfo Glibc
 
 ###
+### Fix broken installation of LibXML2
+###
+
+libxml2Version=$(ls "$BUILDDIR/Programs/LibXML2/" | grep -v "Settings\|Current")
+duplicatedDir="$BUILDDIR/Programs/LibXML2/$libxml2Version/Programs"
+if [ -d "$duplicatedDir" ]
+then
+    libdir=$(find "$duplicatedDir" -name lib -type d)
+    for i in "$libdir/"*; do sudo mv "$i" "$BUILDDIR/Programs/LibXML2/$libxml2Version/lib/"; done
+    sudo rm -rf "$duplicatedDir"
+    InChroot /tools/bin/SymlinkProgram -c overwrite LibXML2 $libxml2Version
+fi
+
+###
 ### Update /etc/passwd, /etc/group and /etc/resolv.conf
 ###
 
@@ -182,13 +196,10 @@ then
     fi
 fi
 
+
 ###################################################################################################
 ### Operation -- GoboLinux part of the script
 ###################################################################################################
-
-###
-### Checkout GoboLinux scripts
-###
 
 if [ ! -e "$BUILDDIR/Programs/Perl/Current/Resources/Description" ]
 then
@@ -197,6 +208,10 @@ then
     # .cpan holds references to /tools, which we don't want to keep.
     sudo rm -rf "$BUILDDIR/root/.cpan"
 fi
+
+###
+### Checkout GoboLinux scripts
+###
 
 if [ ! -d "$WORKDIR/BuildLiveCD" ]
 then
@@ -239,7 +254,7 @@ fi
 
 # Compile extra packages needed to run Compile and to boot the ISO nicely
 unset recompileShadow
-for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools Linux-PAM
+for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools Linux-PAM Dialog
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
@@ -257,7 +272,7 @@ then
 fi
 
 # At this point we can build all the extra packages that we want to have in the ISO
-for appName in Xorg
+for appName in Xorg ZSH
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
@@ -272,19 +287,27 @@ done
 ###
 
 pushd "$BUILDDIR/Programs" > /dev/null
-for appName in *; do CreateGoboPackage "$appName"; done
-ls > "$WORKDIR/BuildLiveCD/Data/Packages-List-Base"
+cat /dev/null > "$WORKDIR/BuildLiveCD/Data/Packages-List-Base.new"
+for appName in *
+do 
+    grep -q "^${appName}$" "$WORKDIR/BuildLiveCD/Data/Packages-List-GoboLinuxTools-"* && continue
+    echo "$appName" >> "$WORKDIR/BuildLiveCD/Data/Packages-List-Base.new"
+    CreateGoboPackage "$appName"
+done
+
+diff "$WORKDIR/BuildLiveCD/Data/Packages-List-Base.new" "$WORKDIR/BuildLiveCD/Data/Packages-List-Base" >& /dev/null
+if [ $? != 0 ]
+then mv "$WORKDIR/BuildLiveCD/Data/Packages-List-Base.new" "$WORKDIR/BuildLiveCD/Data/Packages-List-Base"
+else rm -f "$WORKDIR/BuildLiveCD/Data/Packages-List-Base.new"
+fi
 popd > /dev/null
 
-if [ ! -d "$WORKDIR/ISO/Output/ROLayer" ]
-then
-    # Create the ISO
-    pushd "$WORKDIR/ISO" > /dev/null
-    (
-        export livecdDataDir="$WORKDIR/BuildLiveCD/Data"
-        export livecdUseSystemIndex="true"
-        export PATH="$PATH:$WORKDIR/BuildLiveCD/bin"
-        sudo "$WORKDIR/BuildLiveCD/bin/CompressAndBuildISO"
-    )
-    popd > /dev/null
-fi
+# Create the ISO
+pushd "$WORKDIR/ISO" > /dev/null
+(
+    export livecdDataDir="$WORKDIR/BuildLiveCD/Data"
+    export livecdUseSystemIndex="true"
+    export PATH="$PATH:$WORKDIR/BuildLiveCD/bin"
+    sudo "$WORKDIR/BuildLiveCD/bin/CompressAndBuildISO"
+)
+popd > /dev/null
