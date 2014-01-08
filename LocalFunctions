@@ -3,7 +3,7 @@
 function MoveSettingsFile() {
     local settingsFile="$1"
     local programName="$2"
-    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v Settings)
+    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v "Current\|Settings")
     if [ -z "$programVersion" ]
     then
         return
@@ -21,7 +21,7 @@ function MoveSettingsFile() {
 function MoveFile() {
     local filename="$1"
     local programName="$2"
-    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v Settings)
+    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v "Current\|Settings")
     if [ -z "$programVersion" ]
     then
         return
@@ -39,41 +39,37 @@ function PopulateResources() {
     local version=$(svn list "http://svn.gobolinux.org/recipes/trunk/$appName" 2> /dev/null | tail -n1)
     local repos="http://svn.gobolinux.org/recipes/trunk/$appName/$version"
     sudo mkdir -p "$output/Resources"
-    if [ ! -d "$output/Resources/Tasks" ]
-    then
-        sudo svn checkout "$repos/Resources/Tasks" "$output/Resources/Tasks" 2> /dev/null
-    fi
-    if [ ! -e "$output/Resources/Description" ]
-    then
-        sudo svn checkout "$repos/Resources/Description" "$output/Resources/Description" 2> /dev/null
-    fi
+    for resource in Tasks PostInstall Description
+    do 
+        if [ ! -d "$output/Resources/$resource" ]
+        then sudo svn checkout "$repos/Resources/$resource" "$output/Resources/$resource" 2> /dev/null
+        fi
+    done
     if [ ! -e "$output/Resources/Dependencies" ]
     then
         InChroot Dependencies "$appName" | sudo tee -a "$output/Resources/Dependencies" > /dev/null
+    fi
+    if [ ! -e "$output/Resources/Architecture" ]
+    then
+        InChroot uname -m | sudo tee -a "$output/Resources/Architecture" > /dev/null
     fi
     find "$output/Resources" -type d -name ".svn" 2> /dev/null | xargs sudo rm -rf
 }
 
 function CreateGoboPackage() {
     local appName="$1"
-    appVersion=$(ls "$appName/" 2> /dev/null | grep -v "Settings\|Current")
-    packageName="$PACKAGEDIR/$appName--$appVersion-r0--$(uname -m).tar.bz2"
+    local appVersion=$(ls "$appName/" 2> /dev/null | grep -v "Settings\|Current")
+    local packageName="$PACKAGEDIR/$appName--$appVersion-r0--$(uname -m).tar.bz2"
     if [ ! -d "$appName/" ]
     then
-        # Skip
         return
     fi
-    if [ "$appName" = "Compile" -o "$appName" = "Scripts" ]
-    then
-        # BuildLiveCD will create packages for those
-        echo "Skipping package $appName -- BuildLiveCD will take care of it"
-        return
-    fi
-    if [ ! -e "$packageName" ]
+    local hasModifications=$(find "$appName/$appVersion" -newer "$packageName" 2> /dev/null | wc -l)
+    if [ ! -e "$packageName" -o $hasModifications -gt 0 ]
     then
         echo "Creating package for $appName $appVersion"
         PopulateResources "$appName" "$appName/$appVersion"
-        sudo find "$appName/$appVersion" -type d -empty | while read line
+        sudo find "$appName/$appVersion" -type d -empty | grep -v "Settings/\|Unmanaged/" | while read line
         do 
             sudo rmdir -p $line >& /dev/null
         done
