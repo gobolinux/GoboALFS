@@ -104,7 +104,7 @@ function InstallGoboPackage() {
     local packageDir="$BUILDDIR/Programs/$appName/$snapshotDir"
     sudo mkdir -p "$packageDir"
     sudo cp -R "$WORKDIR/ISO/LocalSVN/tools/$appName/"* "$packageDir/"
-    sudo ln -s "$snapshotDir" "$BUILDDIR/Programs/$appName/Current"
+    sudo ln -fs "$snapshotDir" "$BUILDDIR/Programs/$appName/Current"
     sudo find "$packageDir" -name .svn -type d | xargs sudo rm -rf
     sudo cp -R "$packageDir/Resources/Defaults/Settings" "$packageDir/.."
     InChroot make -C "/Programs/$appName/$snapshotDir"
