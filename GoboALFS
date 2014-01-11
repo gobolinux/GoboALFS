@@ -218,15 +218,18 @@ then
     svn checkout http://svn.gobolinux.org/tools/branches/015/BuildLiveCD "$WORKDIR/BuildLiveCD"
 fi
     
-if [ ! -d "$WORKDIR/ISO/LocalSVN/tools" ]
+if [ ! -d "$WORKDIR/ISO/LocalSVN/tools" -o ! -d "$WORKDIR/ISO/Output/ROLayer" ]
 then
-    # Checkout copies of Scripts and Compile from SVN
-    mkdir "$WORKDIR/ISO"
+    # Update the ISO environment
+    mkdir -p "$WORKDIR/ISO"
     pushd "$WORKDIR/ISO" > /dev/null
     ln -fs ../Packages .
-    livecdDataDir="$WORKDIR/BuildLiveCD/Data" \
-        "$WORKDIR/BuildLiveCD/bin/UpdateEnvironment"
+    livecdDataDir="$WORKDIR/BuildLiveCD/Data" "$WORKDIR/BuildLiveCD/bin/UpdateEnvironment"
+    popd > /dev/null
+fi
 
+if [ ! -d "$BUILDDIR/Programs/Compile" ]
+then
     # Install Scripts and Compile in the chroot
     InstallGoboPackage Scripts
     InstallGoboPackage Compile
@@ -248,8 +251,6 @@ then
         sudo mv "$libxml2Dir/bin/xmlcatalog" "$libxml2Dir/bin/real_xmlcatalog"
         InChroot SymlinkProgram LibXML2 "$libxml2Version"
     fi
-
-    popd > /dev/null
 fi
 
 # Compile extra packages needed to run Compile and to boot the ISO nicely
@@ -272,7 +273,10 @@ then
 fi
 
 # At this point we can build all the extra packages that we want to have in the ISO
-for appName in Xorg ZSH
+printingPackages="CUPS CUPS-Filters Ghostscript Gutenprint"
+networkingPackages="WPA_Supplicant"
+kdePackages="Qt PyQt"
+for appName in Xorg ZSH $printingPackages $networkingPackages $kdePackages
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
@@ -280,7 +284,7 @@ do
     fi
 done
 
-###
+##
 ### Create packages using plain tar. Please notice the revision number (r0), for there are
 ### no GoboLinux recipes to produce them yet.
 ### We also update the package list based on what's been compiled so far.

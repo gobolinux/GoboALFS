@@ -58,25 +58,28 @@ function PopulateResources() {
 
 function CreateGoboPackage() {
     local appName="$1"
-    local appVersion=$(ls "$appName/" 2> /dev/null | grep -v "Settings\|Current")
-    local packageName="$PACKAGEDIR/$appName--$appVersion-r0--$(uname -m).tar.bz2"
     if [ ! -d "$appName/" ]
     then
         return
     fi
-    local hasModifications=$(find "$appName/$appVersion" -newer "$packageName" 2> /dev/null | wc -l)
-    if [ ! -e "$packageName" -o $hasModifications -gt 0 ]
-    then
-        echo "Creating package for $appName $appVersion"
-        PopulateResources "$appName" "$appName/$appVersion"
-        sudo find "$appName/$appVersion" -type d -empty | grep -v "Settings/\|Unmanaged/" | while read line
-        do 
-            sudo rmdir -p $line >& /dev/null
-        done
-        sudo tar cjf "$packageName" "$appName"
-        # Create the Current link
-        [ ! -e "$appName/Current" ] && sudo ln -s "$appVersion" "$appName/Current"
-    fi
+    local appVersions=( $(ls "$appName/" 2> /dev/null | grep -v "Settings\|Current" | sort -n) )
+    for appVersion in ${appVersions[@]}
+    do
+        local packageName="$PACKAGEDIR/$appName--$appVersion-r0--$(uname -m).tar.bz2"
+        local hasModifications=$(find "$appName/$appVersion" -newer "$packageName" 2> /dev/null | wc -l)
+        if [ ! -e "$packageName" -o $hasModifications -gt 0 ]
+        then
+            echo "Creating package for $appName $appVersion"
+            PopulateResources "$appName" "$appName/$appVersion"
+            sudo find "$appName/$appVersion" -type d -empty | grep -v "Settings/\|Unmanaged/" | while read line
+            do 
+                sudo rmdir -p $line >& /dev/null
+            done
+            sudo tar cjf "$packageName" "$appName"
+        fi
+    done
+    # Create the Current link
+    [ ! -e "$appName/Current" ] && sudo ln -s "$appVersion" "$appName/Current"
 }
 
 function InChroot() {

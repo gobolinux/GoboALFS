@@ -1,14 +1,8 @@
-Install Qt and PyQT to get rid of the following errors:
-	Building Manager/20131228-SVN
-	/bin/sh: pyuic: command not found
+Fix BuildType_manifest code
 
-	Building LiveCD/20131228-SVN
-	make: *** [language] Error 127
 
-	rmdir: failed to remove ‘lib/python2.7/site-packages’: No such file or directory
-	Makefile:28: recipe for target 'clean' failed
-	make: *** [clean] Error 1
-	make: Leaving directory '/Programs/Installer/20131228-SVN'
+kernel/aufs: test_add:293: printk
+Lode console font is loaded, but once the framebuffer device is configured, the default font comes back
 
 
 (automatically) Patch LibTool to get rid of the following fatal message:
@@ -19,19 +13,11 @@ Install Qt and PyQT to get rid of the following errors:
 Some packages end up with $target/Shared. We should make $target/Shared -> $target/share, or dynamically
 replace Shared with share in Compile.
 
-
-=> Setting console font...
-Cannot open font file /Data/Fonts/Console/lode-lat1u-16.psf.gz
-
 => Launching a debug shell (zsh)...
 /etc/zshrc:bindkey:91: cannot bindto an empt key sequence
 /etc/zshrc:bindkey:92: cannot bind to an empty key seunce
 /etc/zshrc:bindkey:93: cannot bind to an emptykey sequence
 /etc/zshrc:bindkey:94: cannot bind to an empty key sequence
-
-
-Broken Xorg drivers: modesetting and vesa_drv.
-
 
 Final kernel:
 	CONFIG_RAMFS=y
