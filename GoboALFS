@@ -297,7 +297,6 @@ do
     CreateGoboPackage "$appName"
 done
 popd > /dev/null
-CreatePackageList "Base"
 
 # Create the ISO
 pushd "$WORKDIR/ISO" > /dev/null
