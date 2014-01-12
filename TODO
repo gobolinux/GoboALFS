@@ -1,3 +1,18 @@
+Broken packages: 
+- CUPS (has usr)
+- PyQt (has Shared)
+- Xorg-App (has Shared and share)
+- Xorg-Driver (has Shared and share)
+
+Directory tree:
+- We have both /System/Variable and /Data/Variable on the LiveCD
+  -> /System/Variable/run/dbus
+  -> /System/Variable/tmp/Scripts-root/dependencies_cache
+
+Input device:
+- /System/Links/Shared/X11/xorg.conf.d/*.conf: replace /System/Kernel/Devices with /dev
+
+
 Fix BuildType_manifest code
 
 
