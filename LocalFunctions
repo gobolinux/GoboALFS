@@ -56,6 +56,38 @@ function PopulateResources() {
     find "$output/Resources" -type d -name ".svn" 2> /dev/null | xargs sudo rm -rf
 }
 
+function CreatePackageList() {
+    local packageList="$WORKDIR/BuildLiveCD/Data/PackageList-${1}"
+    local newPackageList="$WORKDIR/BuildLiveCD/Data/PackageList-${1}.new"
+
+    cat /dev/null > "$newPackageList"
+    pushd "$BUILDDIR/Programs" > /dev/null
+    for appName in *
+    do
+        # if appName is already in any other existing list, do not add it to $newPackageList
+        local skipPackage="false"
+        for existingPackageList in "$WORKDIR/BuildLiveCD/Data/"*
+        do
+            if [ $(basename "$existingPackageList") != $(basename "$packageList") ]
+            then
+                if grep -q "^${appName}$" "$existingPackageList"
+                then
+                    skipPackage="true"
+                    break
+                fi
+            fi
+        done
+        [ "$skipPackage" = "false" ] && echo "$appName" >> "$newPackageList"
+    done
+    popd > /dev/null
+
+    diff "$packageList" "$newPackageList" >& /dev/null
+    if [ $? != 0 ]
+    then mv "$newPackageList" "$packageList"
+    else rm -f "$newPackageList"
+    fi
+}
+
 function CreateGoboPackage() {
     local appName="$1"
     if [ ! -d "$appName/" ]

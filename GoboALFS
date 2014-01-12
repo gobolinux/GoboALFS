@@ -255,34 +255,34 @@ fi
 
 # Compile extra packages needed to run Compile and to boot the ISO nicely
 unset recompileShadow
-for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools Linux-PAM Dialog
+for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
         InChroot Compile --no-sign --symlink=no "$appName"
         InChroot SymlinkProgram -c overwrite "$appName"
-        [ "$appName" = "Linux-PAM" ] && recompileShadow=1
+        if [ "$appName" = "Linux-PAM" ]
+        then
+            # Recompile Shadow with Linux-PAM support
+            shadowVersion=$(ls "$BUILDDIR/Programs/Shadow/" | grep -v "Settings\|Current")
+            InChroot Compile --no-sign Shadow $shadowVersion
+        fi
     fi
 done
-
-# Recompile Shadow with Linux-PAM support
-if [ ! -z "$recompileShadow" ]
-then
-    shadowVersion=$(ls "$BUILDDIR/Programs/Shadow/" | grep -v "Settings\|Current")
-    InChroot Compile --no-sign Shadow $shadowVersion
-fi
+CreatePackageList "Base"
 
 # At this point we can build all the extra packages that we want to have in the ISO
-printingPackages="CUPS CUPS-Filters Ghostscript Gutenprint"
-networkingPackages="WPA_Supplicant"
-kdePackages="Qt PyQt"
-for appName in Xorg ZSH $printingPackages $networkingPackages $kdePackages
-do
-    if [ ! -d "$BUILDDIR/Programs/$appName" ]
-    then
-        InChroot Compile --no-sign "$appName"
-    fi
-done
+for appName in Xorg XTerm; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
+CreatePackageList "Xorg"
+
+for appName in CUPS CUPS-Filters Ghostscript Gutenprint; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
+CreatePackageList "Printing"
+
+for appName in OpenSSH WPA_Supplicant; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
+CreatePackageList "Networking"
+
+for appName in Qt PyQt; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
+CreatePackageList "Qt"
 
 ##
 ### Create packages using plain tar. Please notice the revision number (r0), for there are
@@ -291,20 +291,13 @@ done
 ###
 
 pushd "$BUILDDIR/Programs" > /dev/null
-cat /dev/null > "$WORKDIR/BuildLiveCD/Data/Packages-List-Base.new"
 for appName in *
 do 
     grep -q "^${appName}$" "$WORKDIR/BuildLiveCD/Data/Packages-List-GoboLinuxTools-"* && continue
-    echo "$appName" >> "$WORKDIR/BuildLiveCD/Data/Packages-List-Base.new"
     CreateGoboPackage "$appName"
 done
-
-diff "$WORKDIR/BuildLiveCD/Data/Packages-List-Base.new" "$WORKDIR/BuildLiveCD/Data/Packages-List-Base" >& /dev/null
-if [ $? != 0 ]
-then mv "$WORKDIR/BuildLiveCD/Data/Packages-List-Base.new" "$WORKDIR/BuildLiveCD/Data/Packages-List-Base"
-else rm -f "$WORKDIR/BuildLiveCD/Data/Packages-List-Base.new"
-fi
 popd > /dev/null
+CreatePackageList "Base"
 
 # Create the ISO
 pushd "$WORKDIR/ISO" > /dev/null
