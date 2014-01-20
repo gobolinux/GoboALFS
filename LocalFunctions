@@ -57,8 +57,8 @@ function PopulateResources() {
 }
 
 function CreatePackageList() {
-    local packageList="$WORKDIR/BuildLiveCD/Data/PackageList-${1}"
-    local newPackageList="$WORKDIR/BuildLiveCD/Data/PackageList-${1}.new"
+    local packageList="$WORKDIR/BuildLiveCD/Data/Packages-List-${1}"
+    local newPackageList="$WORKDIR/BuildLiveCD/Data/Packages-List-${1}.new"
 
     cat /dev/null > "$newPackageList"
     pushd "$BUILDDIR/Programs" > /dev/null
