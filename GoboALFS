@@ -284,6 +284,9 @@ CreatePackageList "Networking"
 for appName in Qt PyQt; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
 CreatePackageList "Qt"
 
+#for appName in KDE; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
+CreatePackageList "KDE"
+
 ##
 ### Create packages using plain tar. Please notice the revision number (r0), for there are
 ### no GoboLinux recipes to produce them yet.
@@ -297,6 +300,29 @@ do
     CreateGoboPackage "$appName"
 done
 popd > /dev/null
+
+# Remove duplicated copies of GoboLinux specific packages inside ROLayer
+if [ -d "$WORKDIR/ISO/Output/ROLayer/Programs" ]
+then
+    pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
+    for appName in AbsTK BootScripts Compile ConfigTools EnhancedSkel Installer LiveCD Manager Scripts
+    do
+        for appVersion in $(ls $appName | grep -v "Current\|Settings" | sort -n)
+        do
+            echo "$appVersion" | grep -q "SVN" || break
+            appVersion=$(echo "$appVersion" | sed 's,[-A-Z],,g')
+            today=`date +%Y%m%d`
+            timeofday=`date +%H%M`
+            if [ $appVersion -lt $today ] || [ $timeofday -gt 2358 ]
+            then
+                # Remove (potentially) old snapshot, and also make sure to remove the 'Current' symlink
+                sudo rm -rf -- "$appName/$appVersion"
+                sudo rm -f "$appName/Current"
+            fi
+        done
+    done
+    popd > /dev/null
+fi
 
 # Create the ISO
 pushd "$WORKDIR/ISO" > /dev/null
