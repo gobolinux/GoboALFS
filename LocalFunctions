@@ -39,6 +39,7 @@ function PopulateResources() {
     local version=$(svn list "http://svn.gobolinux.org/recipes/trunk/$appName" 2> /dev/null | tail -n1)
     local repos="http://svn.gobolinux.org/recipes/trunk/$appName/$version"
     sudo mkdir -p "$output/Resources"
+    sudo rm -rf -- "$output/Resources/SettingsBackup"
     for resource in Tasks PostInstall Description
     do 
         if [ ! -d "$output/Resources/$resource" ]
@@ -107,7 +108,7 @@ function CreateGoboPackage() {
             do 
                 sudo rmdir -p $line >& /dev/null
             done
-            sudo tar cjf "$packageName" "$appName"
+            sudo tar cjf "$packageName" "$appName/$appVersion"
         fi
     done
     # Create the Current link
