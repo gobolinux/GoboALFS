@@ -144,7 +144,7 @@ then
 fi
 
 ###
-### Update /etc/passwd, /etc/group and /etc/resolv.conf
+### Update /etc/passwd, /etc/group, /etc/resolv.conf, and udev settings
 ###
 
 if ! grep -q "^fibo:" "$BUILDDIR/System/Settings/passwd"
@@ -162,6 +162,12 @@ then
     echo nameserver 208.67.222.222 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
     echo nameserver 208.67.220.220 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
 fi
+udevVersion=$(ls "$BUILDDIR/Programs/Udev/" | grep -v "Settings\|Current")
+for rulefile in "$BUILDDIR/Programs/Udev/$udevVersion/Resources/Defaults/Settings/udev/rules.d"/*
+do
+    grep -q "pci-db" "$rulefile" && sudo perl -pi -e "s,pci-db,hwdb --subsystem=pci,g" "$rulefile"
+    grep -q "usb-db" "$rulefile" && sudo perl -pi -e "s,usb-db,hwdb --subsystem=usb,g" "$rulefile"
+done
 
 ###
 ### Make sure we have /bin/sh
