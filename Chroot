@@ -1,0 +1,18 @@
+#!/bin/bash
+
+WORKDIR=$(readlink -f $(dirname "$0")/../WorkDirectory)
+BUILDDIR=$WORKDIR/RootFS
+
+sudo mount -o bind /proc "$BUILDDIR/proc"
+sudo mount -o bind /dev "$BUILDDIR/dev"
+
+export PATH=/bin:/sbin
+export NO_UNIONFS=yes
+export SUDO_OK=1
+unset LC_ALL
+unset LANG
+unset LANGUAGE
+
+sudo chroot "$BUILDDIR" /bin/bash
+sudo umount "$BUILDDIR/dev"
+sudo umount "$BUILDDIR/proc"
