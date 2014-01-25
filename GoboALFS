@@ -261,7 +261,7 @@ fi
 
 # Compile extra packages needed to run Compile and to boot the ISO nicely
 unset recompileShadow
-for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH
+for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs Parted
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
