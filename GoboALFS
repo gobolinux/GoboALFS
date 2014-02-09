@@ -144,7 +144,7 @@ then
 fi
 
 ###
-### Update /etc/passwd, /etc/group, /etc/resolv.conf, and udev settings
+### Update /etc/passwd, /etc/group, /etc/resolv.conf, /etc/sudoers, and udev settings
 ###
 
 if ! grep -q "^fibo:" "$BUILDDIR/System/Settings/passwd"
@@ -161,6 +161,10 @@ then
     sudo rm -f "$BUILDDIR/System/Settings/resolv.conf"
     echo nameserver 208.67.222.222 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
     echo nameserver 208.67.220.220 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
+fi
+if sudo grep -q "^root" "$BUILDDIR/Programs/Sudo/Current/Resources/Defaults/Settings/sudoers"
+then
+    sudo perl -pi -e "s/^root/gobo/g" "$BUILDDIR/Programs/Sudo/Current/Resources/Defaults/Settings/sudoers"
 fi
 udevVersion=$(ls "$BUILDDIR/Programs/Udev/" | grep -v "Settings\|Current")
 for rulefile in "$BUILDDIR/Programs/Udev/$udevVersion/Resources/Defaults/Settings/udev/rules.d"/*
@@ -277,21 +281,19 @@ do
 done
 CreatePackageList "Base"
 
+function CompileExtras() {
+    local listname="$1"
+    shift
+    for appName in $@; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
+    CreatePackageList "$listname"
+}
+
 # At this point we can build all the extra packages that we want to have in the ISO
-for appName in Xorg XTerm; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
-CreatePackageList "Xorg"
-
-for appName in CUPS CUPS-Filters Ghostscript Gutenprint; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
-CreatePackageList "Printing"
-
-for appName in OpenSSH WPA_Supplicant; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
-CreatePackageList "Networking"
-
-for appName in Qt PyQt; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
-CreatePackageList "Qt"
-
-#for appName in KDE; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
-CreatePackageList "KDE"
+CompileExtras "Xorg" Xorg XTerm
+CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint
+CompileExtras "Networking" OpenSSH WPA_Supplicant
+CompileExtras "Qt" Qt PyQt
+#CompileExtras "KDE" KDE
 
 ##
 ### Create packages using plain tar. Please notice the revision number (r0), for there are
