@@ -10,4 +10,6 @@ sudo qemu-system-i386 \
     -usb \
     -vga qxl \
     -net nic,macaddr=E0:06:E6:CE:FF:FF,model=virtio -net tap,ifname=tap0,script=no \
-    -cdrom "$WORKDIR/ISO/Output/GoboLinux-NoVersion.iso"
+    -hda /Data/VMs/gobolinux-015-i686.img \
+    -cdrom "$WORKDIR/ISO/Output/GoboLinux-NoVersion.iso" \
+    -boot d

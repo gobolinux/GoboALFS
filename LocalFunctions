@@ -115,6 +115,26 @@ function CreateGoboPackage() {
     [ ! -e "$appName/Current" ] && sudo ln -s "$appVersion" "$appName/Current"
 }
 
+function UpdateProgramsDu() {
+    local duFile="$1"
+    if [ $(basename "$PWD") != "Programs" ]
+    then
+        echo "Error: UpdateProgramsDu called with invalid \$PWD (should be /path/to/Programs)"
+        return
+    fi
+    for packageName in "$PACKAGEDIR/"*.tar.bz2
+    do
+        #$appName--$appVersion-r0--$(uname -m).tar.bz2"
+        if [ "$packageName" -nt "$duFile" ]
+        then
+            local appName=$(echo "$(basename $packageName)" | sed 's,\(.*\)--\(.*\)--\(.*\).*,\1,g')
+            local duData="$(sudo du -s ./$appName)"
+            echo "Updating Programs_du entry for package $appName"
+            sudo sed -i~ "s,.* \./$appName$,$duData,g" "$duFile"
+        fi
+    done
+}
+
 function InChroot() {
     (
         sudo mount -o bind /proc "$BUILDDIR/proc"

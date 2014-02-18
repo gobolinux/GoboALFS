@@ -1,45 +1,26 @@
-Broken packages: 
-- CUPS (has usr)
-- PyQt (has Shared)
-- Xorg-App (has Shared and share)
-- Xorg-Driver (has Shared and share)
-
-Directory tree:
-- We have both /System/Variable and /Data/Variable on the LiveCD
-  -> /System/Variable/run/dbus
-  -> /System/Variable/tmp/Scripts-root/dependencies_cache
-
-Input device:
-- /System/Links/Shared/X11/xorg.conf.d/*.conf: replace /System/Kernel/Devices with /dev
-
-
-Fix BuildType_manifest code
-
-
-kernel/aufs: test_add:293: printk
-Lode console font is loaded, but once the framebuffer device is configured, the default font comes back
-
-
-(automatically) Patch LibTool to get rid of the following fatal message:
+Broken recipes: 
+- Xorg-App (installs both Shared and share)
+- Xorg-Driver (installs both Shared and share)
+- Unknown Xorg recipe(s) causing X input to fail: 
+  -> /System/Links/Shared/X11/xorg.conf.d/*.conf: need to replace /System/Kernel/Devices with /dev
+- LibTool:
+  Needs to be patched to get rid of the following fatal message:
     libtool: install: /bin/install -c .libs/libxcb.lai /Programs/Xorg-Lib/7.7/lib/libxcb.la
     libtool: install: error: cannot install `libxcb-composite.la' to a directory not ending in /usr/lib
 
+Directory tree:
+- We have both /System/Variable and /Data/Variable on the LiveCD
+  -> /System/Variable/run/dbus (config files)
+  -> /System/Variable/tmp/Scripts-root/dependencies_cache
+-> Get rid of lib64
 
-Some packages end up with $target/Shared. We should make $target/Shared -> $target/share, or dynamically
-replace Shared with share in Compile.
+Debug traces:
+  -> kernel/aufs: test_add:293: printk
 
-=> Launching a debug shell (zsh)...
-/etc/zshrc:bindkey:91: cannot bindto an empt key sequence
-/etc/zshrc:bindkey:92: cannot bind to an empty key seunce
-/etc/zshrc:bindkey:93: cannot bind to an emptykey sequence
-/etc/zshrc:bindkey:94: cannot bind to an empty key sequence
-
-Final kernel:
-	CONFIG_RAMFS=y
-	CONFIG_CRAMFS=y
-	CONFIG_ISO9660_FS=y
-	CONFIG_BLK_DEV_LOOP=y
-	CONFIG_BLK_DEV_LOOP_MIN_COUNT=0
+Other:
+  -> Lode console font is loaded, but once the framebuffer device is configured, the default font comes back
+  -> /etc/sudoers has references to 'root' by default
+  -> Installer needs a workaround for the ISO being recognized as a valid installation target
 
 
 ### Remember: we do not use UnionFS to build packages with 015. FiboSandbox is the only method
@@ -63,23 +44,3 @@ Final kernel:
 ### /Data/Variable/log/lastlog (empty)
 ### ./Data/Variable/cache/ldconfig/ (directory)
 ###
-
-### To be able to boot your new system you need to follow
-### the next steps:
-### 
-###         - Mount the virtual kernel file systems.
-### 
-###         - Enter to the chroot using the command found
-###         in the section -Entering the Chroot Environment-
-###         except if building CLFS with METHOD=boot.
-### 
-###         - Set a password for the root user.
-### 
-###         - Edit or create /etc/fstab,
-###                          /etc/hosts,
-###                          /etc/sysconfig/clock,
-###                          /etc/sysconfig/console,
-###                          /etc/sysconfig/network,
-###                          /etc/sysconfig/ifconfig.eth0,
-###                          /etc/resolv.conf
-###         and any other configuration file required to suit your needs.

@@ -31,10 +31,9 @@ BUILDDIR=$WORKDIR/RootFS
 # LocalFunctions must be imported after all global definitions have been set
 source $SVNDIR/LocalFunctions
 
-
-###
+###################################################################################################
 ### Sanity checks
-###
+###################################################################################################
 
 if ! grep -q "^lfs:" /etc/passwd || ! grep -q "^lfs:" /etc/group
 then
@@ -116,9 +115,7 @@ then
     sudo chmod +x "$BUILDDIR/tools/bin/packInstall-gobolinux.sh"
 fi
 
-###
-### Move left-over files to the packages where they belong
-###
+# Move left-over files to the packages where they belong
 
 MoveSettingsFile nsswitch.conf Glibc
 MoveSettingsFile udev/hwdb.bin Udev
@@ -129,9 +126,7 @@ MoveFile lib/libstdc++.la GCC
 MoveFile lib/locale Glibc
 MoveFile share/zoneinfo Glibc
 
-###
-### Fix broken installation of LibXML2
-###
+# Fix broken installation of LibXML2
 
 libxml2Version=$(ls "$BUILDDIR/Programs/LibXML2/" | grep -v "Settings\|Current")
 duplicatedDir="$BUILDDIR/Programs/LibXML2/$libxml2Version/Programs"
@@ -143,9 +138,7 @@ then
     InChroot /tools/bin/SymlinkProgram -c overwrite LibXML2 $libxml2Version
 fi
 
-###
-### Update /etc/passwd, /etc/group, /etc/resolv.conf, /etc/sudoers, and udev settings
-###
+# Update /etc/passwd, /etc/group, /etc/resolv.conf, /etc/sudoers, and udev settings
 
 if ! grep -q "^fibo:" "$BUILDDIR/System/Settings/passwd"
 then
@@ -173,9 +166,7 @@ do
     grep -q "usb-db" "$rulefile" && sudo perl -pi -e "s,usb-db,hwdb --subsystem=usb,g" "$rulefile"
 done
 
-###
-### Make sure we have /bin/sh
-###
+# Make sure we have /bin/sh
 
 if [ ! -e "$BUILDDIR/bin/sh" ]
 then
@@ -184,9 +175,7 @@ then
     sudo ln -sf "/Programs/Bash/$bashVersion/bin/sh" "$BUILDDIR/System/Links/Executables/sh"
 fi
 
-###
-### Fix /proc and /dev
-###
+# Fix /proc and /dev
 
 if [ ! -h "$BUILDDIR/proc" ]
 then
@@ -219,9 +208,7 @@ then
     sudo rm -rf "$BUILDDIR/root/.cpan"
 fi
 
-###
-### Checkout GoboLinux scripts
-###
+# Checkout GoboLinux scripts
 
 if [ ! -d "$WORKDIR/BuildLiveCD" ]
 then
@@ -265,7 +252,7 @@ fi
 
 # Compile extra packages needed to run Compile and to boot the ISO nicely
 unset recompileShadow
-for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs Parted
+for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs Parted SYSLINUX Atool
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
@@ -293,13 +280,11 @@ CompileExtras "Xorg" Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint
 CompileExtras "Networking" OpenSSH WPA_Supplicant
 CompileExtras "Qt" Qt PyQt
-#CompileExtras "KDE" KDE
+CompileExtras "KDE" KDE
 
-##
-### Create packages using plain tar. Please notice the revision number (r0), for there are
-### no GoboLinux recipes to produce them yet.
-### We also update the package list based on what's been compiled so far.
-###
+# Create packages using plain tar. Please notice the revision number (r0), for there are
+# no GoboLinux recipes to produce them yet.
+# We also update the package list based on what's been compiled so far.
 
 pushd "$BUILDDIR/Programs" > /dev/null
 for appName in *
@@ -309,26 +294,41 @@ do
 done
 popd > /dev/null
 
-# Remove duplicated copies of GoboLinux specific packages inside ROLayer
 if [ -d "$WORKDIR/ISO/Output/ROLayer/Programs" ]
 then
     pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
+    
+    # Remove duplicated copies of GoboLinux specific packages inside ROLayer
     for appName in AbsTK BootScripts Compile ConfigTools EnhancedSkel Installer LiveCD Manager Scripts
     do
-        for appVersion in $(ls $appName | grep -v "Current\|Settings" | sort -n)
+        for appVersion in $(ls $appName/ | grep -v "Current\|Settings" | sort -n)
         do
-            echo "$appVersion" | grep -q "SVN" || break
-            appVersion=$(echo "$appVersion" | sed 's,[-A-Z],,g')
+            echo "$appVersion" | grep -q "SVN" || continue
+            appVersionAlone=$(echo "$appVersion" | sed 's,[-A-Z],,g')
             today=`date +%Y%m%d`
             timeofday=`date +%H%M`
-            if [ $appVersion -lt $today ] || [ $timeofday -gt 2358 ]
+            if [ $appVersionAlone -lt $today ] || [ $timeofday -gt 2358 ]
             then
                 # Remove (potentially) old snapshot, and also make sure to remove the 'Current' symlink
                 sudo rm -rf -- "$appName/$appVersion"
                 sudo rm -f "$appName/Current"
             fi
         done
+        if [ ! -h "$appName/Current" ]
+        then
+            # Create Current symlink
+            sudo ln -s $(ls $appName/ | grep -v "Current\|Settings" | sort -n | tail -n1) "$appName/Current"
+        fi
     done
+
+    # Create/update Installer's Programs_du file
+    installerVersion=$(ls Installer/ | grep -v "Current\|Settings" | sort -n | tail -n1)
+    duFile="$PWD/Installer/$installerVersion/share/Installer/Information/Programs_du.txt"
+    if [ $(stat -c '%s' "$duFile") = 0 ]
+    then sudo du -s ./* | sudo tee "$duFile" > /dev/null
+    else UpdateProgramsDu "$duFile"
+    fi
+
     popd > /dev/null
 fi
 
