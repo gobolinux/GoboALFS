@@ -296,9 +296,8 @@ popd > /dev/null
 
 if [ -d "$WORKDIR/ISO/Output/ROLayer/Programs" ]
 then
-    pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
-    
     # Remove duplicated copies of GoboLinux specific packages inside ROLayer
+    pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
     for appName in AbsTK BootScripts Compile ConfigTools EnhancedSkel Installer LiveCD Manager Scripts
     do
         for appVersion in $(ls $appName/ | grep -v "Current\|Settings" | sort -n)
@@ -317,27 +316,24 @@ then
         if [ ! -h "$appName/Current" ]
         then
             # Create Current symlink
-            sudo ln -s $(ls $appName/ | grep -v "Current\|Settings" | sort -n | tail -n1) "$appName/Current"
+            sudo ln -sf $(ls $appName/ | grep -v "Current\|Settings" | sort -n | tail -n1) "$appName/Current"
         fi
     done
-
-    # Create/update Installer's Programs_du file
-    installerVersion=$(ls Installer/ | grep -v "Current\|Settings" | sort -n | tail -n1)
-    duFile="$PWD/Installer/$installerVersion/share/Installer/Information/Programs_du.txt"
-    if [ $(stat -c '%s' "$duFile") = 0 ]
-    then sudo du -s ./* | sudo tee "$duFile" > /dev/null
-    else UpdateProgramsDu "$duFile"
-    fi
-
     popd > /dev/null
 fi
 
-# Create the ISO
-pushd "$WORKDIR/ISO" > /dev/null
-(
-    export livecdDataDir="$WORKDIR/BuildLiveCD/Data"
-    export livecdUseSystemIndex="true"
-    export PATH="$PATH:$WORKDIR/BuildLiveCD/bin"
-    sudo "$WORKDIR/BuildLiveCD/bin/CompressAndBuildISO"
-)
+# Create the ROLayer environment to force GoboLinux tools to be fetched
+CreateISO rolayer rolayer
+
+# Create/update Installer's Programs_du file
+pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
+installerVersion=$(ls Installer/ | grep -v "Current\|Settings" | sort -n | tail -n1)
+duFile="$PWD/Installer/$installerVersion/share/Installer/Information/Programs_du.txt"
+if [ ! -e "$duFile" ] || [ $(stat -c '%s' "$duFile") = 0 ]
+then sudo du -s ./* | sudo tee "$duFile" > /dev/null
+else UpdateProgramsDu "$duFile"
+fi
 popd > /dev/null
+
+# Create the ISO
+CreateISO squashfs iso

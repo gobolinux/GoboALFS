@@ -115,6 +115,19 @@ function CreateGoboPackage() {
     [ ! -e "$appName/Current" ] && sudo ln -s "$appVersion" "$appName/Current"
 }
 
+function CreateISO() {
+    local startStage="$1"
+    local endStage="$2"
+    pushd "$WORKDIR/ISO" > /dev/null
+    (
+        export livecdDataDir="$WORKDIR/BuildLiveCD/Data"
+        export livecdUseSystemIndex="true"
+        export PATH="$PATH:$WORKDIR/BuildLiveCD/bin"
+        sudo "$WORKDIR/BuildLiveCD/bin/CompressAndBuildISO" $startStage $endStage
+    )
+    popd > /dev/null
+}
+
 function UpdateProgramsDu() {
     local duFile="$1"
     if [ $(basename "$PWD") != "Programs" ]
