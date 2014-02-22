@@ -61,7 +61,6 @@ static char *goboPrograms;
 static char *goboExecutables;
 static char *goboSExecutables;
 static char *goboLibraries;
-static char *goboLibraries64;
 static char *goboHeaders;
 static char *goboManuals;
 static char *goboSettings;
@@ -232,15 +231,6 @@ symlink_program(char *name, char *version)
         do_exec("ldconfig");
     }
 
-    set_dir(dirname, "lib64");
-    if (dir_exists(dirname)) {
-        print_msg("Symlinking libraries...\n");
-        do_link(goboLibraries64, dirname);
-        
-        print_msg("Updating library database (ldconfig)...\n");
-        do_exec("ldconfig");
-    }
-
     set_dir(dirname, "include");
     if (dir_exists(dirname)) {
         print_msg("Symlinking headers...\n");
@@ -350,7 +340,6 @@ main(int argc, char **argv)
     GET_OR_ASSIGN(goboSExecutables, "goboSExecutables", "/usr/sbin");
     GET_OR_ASSIGN(goboExecutables,  "goboExecutables",  "/usr/bin");
     GET_OR_ASSIGN(goboLibraries,    "goboLibraries",    "/usr/lib");
-    GET_OR_ASSIGN(goboLibraries64,  "goboLibraries64",  "/usr/lib64");
     GET_OR_ASSIGN(goboHeaders,      "goboHeaders",      "/usr/include");
     GET_OR_ASSIGN(goboManuals,      "goboManuals",      "/usr/share/man");
     GET_OR_ASSIGN(goboSettings,     "goboSettings",     "/etc");
