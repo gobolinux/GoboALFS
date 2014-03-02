@@ -280,7 +280,7 @@ CompileExtras "Xorg" Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint
 CompileExtras "Networking" OpenSSH WPA_Supplicant
 CompileExtras "Qt" Qt PyQt
-CompileExtras "KDE" KDE
+CompileExtras "KDE" ConsoleKit KDE
 
 # Create packages using plain tar. Please notice the revision number (r0), for there are
 # no GoboLinux recipes to produce them yet.
@@ -324,6 +324,27 @@ fi
 
 # Create the ROLayer environment to force GoboLinux tools to be fetched
 CreateISO rolayer rolayer
+
+# Fix permissions and file ownership
+if [ -d "$WORKDIR/ISO/Output/ROLayer/Programs/DBus" ]
+then
+    messagebus_gid=$(grep messagebus:x: "$WORKDIR/ISO/Output/ROLayer/System/Settings/group" | cut -d: -f3)
+    sudo chgrp $messagebus_gid "$WORKDIR/ISO/Output/ROLayer/Programs/DBus/Current/lib/dbus/dbus-daemon-launch-helper" 
+fi
+if [ -d "$WORKDIR/ISO/Output/ROLayer/Data/Variable/empty" ]
+then
+    sys_gid=$(grep sys:x: "$WORKDIR/ISO/Output/ROLayer/System/Settings/group" | cut -d: -f3)
+    sudo chgrp $sys_gid "$WORKDIR/ISO/Output/ROLayer/Data/Variable/empty"
+fi
+
+# Workaround for a nasty Aufs bug: it will not honor the owner of files from the upper 
+# layer (read-write) if they differ from that of the lower layer (read-only).
+livecd_uid=$(grep polkitd:x: "$WORKDIR/ISO/Output/ROLayer/System/Settings/passwd" | cut -d: -f3)
+chroot_uid=$(grep polkitd:x: "$BUILDDIR/System/Settings/passwd" | cut -d: -f3)
+if [ "x$chroot_uid" != "x$livecd_uid" ]
+then
+    sudo perl -pi -e "s/polkitd:x:$livecd_uid:/polkitd:x:$chroot_uid:/g" "$WORKDIR/ISO/Output/ROLayer/System/Settings/passwd"
+fi
 
 # Create/update Installer's Programs_du file
 pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
