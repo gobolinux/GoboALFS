@@ -138,6 +138,16 @@ then
     InChroot /tools/bin/SymlinkProgram -c overwrite LibXML2 $libxml2Version
 fi
 
+# Install extra locales. Please refer to 'localedef --list-archive' on a regular desktop machine
+# for a list of common locales.
+
+InChroot localedef -i pt_BR -f ISO-8859-1 pt_BR
+InChroot localedef -i pt_BR -f UTF-8      pt_BR
+InChroot localedef -i pl_PL -f ISO-8859-2 pl_PL
+InChroot localedef -i pl_PL -f UTF-8      pl_PL
+InChroot localedef -i hu_HU -f ISO-8859-2 hu_HU
+InChroot localedef -i hu_HU -f UTF-8      hu_HU
+
 # Update /etc/passwd, /etc/group, /etc/resolv.conf, /etc/sudoers, and udev settings
 
 if ! grep -q "^fibo:" "$BUILDDIR/System/Settings/passwd"
@@ -165,6 +175,7 @@ do
     grep -q "pci-db" "$rulefile" && sudo perl -pi -e "s,pci-db,hwdb --subsystem=pci,g" "$rulefile"
     grep -q "usb-db" "$rulefile" && sudo perl -pi -e "s,usb-db,hwdb --subsystem=usb,g" "$rulefile"
 done
+sudo rm -f "$BUILDDIR/Programs/Udev/$udevVersion/Resources/Defaults/Settings/udev/rules.d/55-lfs.rules"
 
 # Make sure we have /bin/sh
 
@@ -252,7 +263,10 @@ fi
 
 # Compile extra packages needed to run Compile and to boot the ISO nicely
 unset recompileShadow
-for appName in Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs Parted SYSLINUX Atool
+for appName in \
+    Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools \
+    Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs Parted SYSLINUX \
+    Atool Htop
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
