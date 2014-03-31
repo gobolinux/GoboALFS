@@ -266,7 +266,7 @@ unset recompileShadow
 for appName in \
     Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs Parted SYSLINUX \
-    Atool Htop
+    Atool Htop Mdadm PowerTOP
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
@@ -288,11 +288,12 @@ function CompileExtras() {
     for appName in $@; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
     CreatePackageList "$listname"
 }
-
+ 
 # At this point we can build all the extra packages that we want to have in the ISO
+NETWORK_MANAGER_PKGS="ISO-Codes LibNotify LibSecret LibCanberra NSS P11-Kit Gcr Gnome-Keyring Polkit-GNOME PPP Iptables NetworkManager Network-Manager-Applet Notification-Daemon"
 CompileExtras "Xorg" Xorg XTerm
-CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint
-CompileExtras "Networking" OpenSSH WPA_Supplicant
+CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
+CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools $NETWORK_MANAGER_PKGS
 CompileExtras "Qt" Qt PyQt
 CompileExtras "KDE" ConsoleKit KDE
 
