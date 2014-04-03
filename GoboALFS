@@ -296,6 +296,7 @@ CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
 CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools $NETWORK_MANAGER_PKGS
 CompileExtras "Qt" Qt PyQt
 CompileExtras "KDE" ConsoleKit KDE
+CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM CairoMM ATKMM GTKMM GParted
 
 # Create packages using plain tar. Please notice the revision number (r0), for there are
 # no GoboLinux recipes to produce them yet.
