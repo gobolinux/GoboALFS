@@ -6,9 +6,10 @@ WORKDIR=$(readlink -f $(dirname "$0")/../WorkDirectory)
 # -vga [std|cirrus|vmware|qxl|xenfb|none
 
 sudo qemu-system-i386 \
-    --enable-kvm \
-    -usb \
-    -usbdevice mouse \
+    -enable-kvm \
+    -daemonize \
+    -usb -usbdevice mouse \
+    -sdl -display sdl \
     -m 1024 \
     -vga qxl \
     -net nic,macaddr=E0:06:E6:CE:FF:FF,model=virtio -net tap,ifname=tap0,script=no \
