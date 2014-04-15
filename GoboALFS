@@ -165,9 +165,10 @@ then
     echo nameserver 208.67.222.222 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
     echo nameserver 208.67.220.220 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
 fi
-if sudo grep -q "^root" "$BUILDDIR/Programs/Sudo/Current/Resources/Defaults/Settings/sudoers"
+sudoers_file="$BUILDDIR/Programs/Sudo/Current/Resources/Defaults/Settings/sudoers"
+if sudo grep -q "^root" "$sudoers_file"
 then
-    sudo perl -pi -e "s/^root/gobo/g" "$BUILDDIR/Programs/Sudo/Current/Resources/Defaults/Settings/sudoers"
+    sudo perl -pi -e "s/^root/gobo/g" "$sudoers_file"
 fi
 udevVersion=$(ls "$BUILDDIR/Programs/Udev/" | grep -v "Settings\|Current")
 for rulefile in "$BUILDDIR/Programs/Udev/$udevVersion/Resources/Defaults/Settings/udev/rules.d"/*
@@ -181,7 +182,7 @@ sudo rm -f "$BUILDDIR/Programs/Udev/$udevVersion/Resources/Defaults/Settings/ude
 
 if [ ! -e "$BUILDDIR/bin/sh" ]
 then
-    bashVersion=$(ls $BUILDDIR/Programs/Bash | grep -v Settings)
+    bashVersion=$(ls $BUILDDIR/Programs/Bash | grep -v "Settings\|Current")
     sudo ln -sf "bash" "$BUILDDIR/Programs/Bash/$bashVersion/bin/sh"
     sudo ln -sf "/Programs/Bash/$bashVersion/bin/sh" "$BUILDDIR/System/Links/Executables/sh"
 fi
