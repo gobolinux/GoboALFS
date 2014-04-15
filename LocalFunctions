@@ -42,7 +42,7 @@ function PopulateResources() {
     sudo rm -rf -- "$output/Resources/SettingsBackup"
     for resource in Tasks PostInstall Description
     do 
-        if [ ! -d "$output/Resources/$resource" ]
+        if [ ! -e "$output/Resources/$resource" ]
         then sudo svn checkout "$repos/Resources/$resource" "$output/Resources/$resource" 2> /dev/null
         fi
     done
@@ -58,9 +58,13 @@ function PopulateResources() {
 }
 
 function IsBlacklisted() {
+    # Returns 0 if not blacklisted, 1 if blacklisted, 2 if package is currently commented out
     local appName="$1"
     # Blacklist packages from JHALFS that we do not intend to ship
-    [ "$appName" = "BootScripts-ALFS" ] && echo "yes" || echo "no"
+    [ "$appName" = "BootScripts-ALFS" ] && echo "1" || {
+       # Do not attempt to add back packages that have been commented out from Packages-List.
+       grep -q "^#[ ]*${appName}$" "$WORKDIR/BuildLiveCD/Data/Packages-List-"* && echo "2" || echo "0"
+    }
 }
 
 function CreatePackageList() {
@@ -71,7 +75,9 @@ function CreatePackageList() {
     pushd "$BUILDDIR/Programs" > /dev/null
     for appName in *
     do
-        [ "$(IsBlacklisted $appName)" = "yes" ] && continue
+        result="$(IsBlacklisted $appName)"
+        [ "$result" = "1" ] && continue
+        [ "$result" = "2" ] && echo "# $appName" >> "$newPackageList" && continue
 
         # If appName is already in any other existing list, do not add it to $newPackageList
         local skipPackage="false"
