@@ -7,7 +7,6 @@ sudo mount -o bind /proc "$BUILDDIR/proc"
 sudo mount -o bind /dev "$BUILDDIR/dev"
 
 export PATH=/bin:/sbin
-export NO_UNIONFS=yes
 export SUDO_OK=1
 unset LC_ALL
 unset LANG
