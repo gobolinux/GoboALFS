@@ -77,7 +77,11 @@ function CreatePackageList() {
     do
         result="$(IsBlacklisted $appName)"
         [ "$result" = "1" ] && continue
-        [ "$result" = "2" ] && echo "# $appName" >> "$newPackageList" && continue
+        if [ "$result" = "2" ]
+        then
+            grep -q "^#[ ]*${appName}$" "$packageList" && echo "# $appName" >> "$newPackageList"
+            continue
+        fi
 
         # If appName is already in any other existing list, do not add it to $newPackageList
         local skipPackage="false"
