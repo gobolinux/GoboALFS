@@ -1,4 +1,4 @@
-Broken recipes: 
+Broken recipes/meta recipes: 
 - Xorg-App (installs both Shared and share)
 - Xorg-Driver (installs both Shared and share)
 - Unknown Xorg recipe(s) causing X input to fail: 
@@ -7,36 +7,17 @@ Broken recipes:
   Needs to be patched to get rid of the following fatal message:
     libtool: install: /bin/install -c .libs/libxcb.lai /Programs/Xorg-Lib/7.7/lib/libxcb.la
     libtool: install: error: cannot install `libxcb-composite.la' to a directory not ending in /usr/lib
-- KDE-Runtime: has /etc
-- KDE-Workspace: has /etc
-- Nepomuk-Core: has /etc
 
+bash-4.2# cd /Programs/
+bash-4.2# for i in *; do [ -d $i/Current/man ] && echo $i; done
+CMake
+FFmpeg
+Kerberos
+Portmap
+SYSLINUX
+Wireless-Tools
+Zip
 
-Debug traces:
-  -> kernel/aufs: test_add:293: printk
-
-Other:
-  -> Lode console font is loaded, but once the framebuffer device is configured, the default font comes back
-  -> mkdir /var/run/console /var/lib/udisks2
-
-### Remember: we do not use UnionFS to build packages with 015. FiboSandbox is the only method
-### supported by now.
-
-### TODO: make sure the following files are created by the live cd scripts:
-### /etc/fstab 
-### /etc/group
-### /etc/gshadow
-### /etc/hosts
-### /etc/inittab
-### /etc/inputrc
-### /etc/localtime(symlink)
-### /etc/lsb-release(?)
-### /etc/passwd(root, bin, nobody)
-### /etc/profile
-###
-### /Data/Variable/mount/utab (empty)
-### /Data/Variable/log/btmp (empty)
-### /Data/Variable/log/wtmp (empty)
-### /Data/Variable/log/lastlog (empty)
-### ./Data/Variable/cache/ldconfig/ (directory)
-###
+dbus config files:
+  -> Unknown username 'avahi', 'pulse'
+  -> Unknown group 'netdev'
