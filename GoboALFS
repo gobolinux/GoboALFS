@@ -112,7 +112,7 @@ if [ ! -d "$BUILDDIR/Programs/BootScripts-ALFS" ]
 then
     pushd "$WORKDIR/jhalfs-trunk" > /dev/null
     echo "Running menuconfig."
-    make menuconfig
+    make menuconfig LIBS="-lncurses -ltinfo"
 
     echo "Processing JHALFS configuration file"
     perl -pi -e "s,^BUILDDIR=.*,BUILDDIR=\"$BUILDDIR\",g" configuration
