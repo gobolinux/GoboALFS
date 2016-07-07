@@ -237,7 +237,9 @@ fi
 
 if [ ! -d "$WORKDIR/BuildLiveCD" ]
 then
-    svn checkout http://svn.gobolinux.org/tools/branches/015/BuildLiveCD "$WORKDIR/BuildLiveCD"
+    pushd "$WORKDIR"
+    git clone https://github.com/gobolinux/BuildLiveCD
+    popd
 fi
     
 if [ ! -d "$WORKDIR/ISO/LocalSVN/tools" -o ! -d "$WORKDIR/ISO/Output/ROLayer" ]
