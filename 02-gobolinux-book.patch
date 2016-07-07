@@ -5,19 +5,6 @@ are installed nicely on the GoboLinux tree.
 
 Signed-off-by: Lucas C. Villa Real <lucasvr@gobolinux.org>
 
-Index: chapter06/systemd.xml
-===================================================================
---- chapter06/systemd.xml	(revision 10416)
-+++ chapter06/systemd.xml	(working copy)
-@@ -79,7 +79,7 @@
-     chroot environment as explained at the beginning of this chapter for the
-     following script to work.</para>
- 
--<screen><userinput remap="install">bash &udev-lfs;/init-net-rules.sh</userinput></screen>
-+<screen><userinput remap="install">echo bash &udev-lfs;/init-net-rules.sh</userinput></screen>
-   </sect2>
- 
-   <sect2 id="contents-udev" role="content">
 Index: chapter06/gcc.xml
 ===================================================================
 --- chapter06/gcc.xml	(revision 10416)
