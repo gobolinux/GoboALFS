@@ -23,6 +23,8 @@ PATCHES=(
     $SVNDIR/01-gobolinux-jhalfs.patch
     $SVNDIR/02-gobolinux-book.patch
 )
+export SRC_ARCHIVE="$WORKDIR/src_archive"
+export WORKDIR
 GOBO_JHALFS_DIR="$SVNDIR/jhalfs"
 ALFS_CONFIGURATION="$SVNDIR/jhalfs/configuration"
 PACKAGEDIR=$WORKDIR/Packages
@@ -56,6 +58,15 @@ then
     exit 1
 fi
 
+sudo su lfs -c "ls $WORKDIR &> /dev/null"
+if [ $? != 0 ]
+then
+    echo "Please make sure that the user 'lfs' has full access to $WORKDIR."
+    echo $WORKDIR | grep -q $HOME && echo "You might want to use a directory not inside your \$HOME."
+    exit 1
+fi
+
+
 ###################################################################################################
 ### Operation -- LFS part of the script
 ###################################################################################################
@@ -67,6 +78,8 @@ if [ $(ls "$BUILDDIR"/ | wc -l | awk {'print $1'}) -gt 0 ]
 then
     echo "Using existing build directory $BUILDDIR"
 fi
+
+mkdir -p "$SRC_ARCHIVE"
 
 if [ ! -d "$WORKDIR/jhalfs-trunk" ]
 then

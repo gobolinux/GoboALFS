@@ -7,7 +7,7 @@ Index: install-blfs-tools.sh
  COMMON_DIR="common"
  BLFS_TOOL='y'
 -BUILDDIR=$(cd ~;pwd)
-+BUILDDIR="/Data/ChrootCompile/WorkDirectory/RootFS"
++BUILDDIR="$WORKDIR/RootFS"
  BLFS_ROOT="${BLFS_ROOT:=/blfs_root}"
  TRACKING_DIR="${TRACKING_DIR:=/var/lib/jhalfs/BLFS}"
  
