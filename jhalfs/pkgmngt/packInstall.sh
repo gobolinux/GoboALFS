@@ -48,6 +48,7 @@ then
   case "$appName" in
       libpipeline) appName="LibPipeline" ;;     # XXX: temporary workaround until recipe is in the store
       procps-ng)   appName="Procps-NG" ;;       # XXX: temporary workaround until recipe is in the store
+      tzdata)      appName="TZData" ;;
       bootscripts) appName="BootScripts-ALFS" ;;
       python2)     appName="Python" ;;
       serf)        appName="Serf" ;;
