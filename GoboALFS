@@ -66,6 +66,13 @@ then
     exit 1
 fi
 
+svn --version &> /dev/null
+if [ $? != 0 ]
+then
+    echo "Please make sure that svn in installed (used to download the LFS snapshot)."
+    exit 1
+fi
+
 
 ###################################################################################################
 ### Operation -- LFS part of the script
