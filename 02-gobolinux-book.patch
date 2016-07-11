@@ -5,19 +5,6 @@ are installed nicely on the GoboLinux tree.
 
 Signed-off-by: Lucas C. Villa Real <lucasvr@gobolinux.org>
 
-Index: chapter06/gcc.xml
-===================================================================
---- chapter06/gcc.xml	(revision 10416)
-+++ chapter06/gcc.xml	(working copy)
-@@ -202,7 +202,7 @@
-     href="adjusting.xml"
-     xpointer="xpointer(//*[@os='g'])"/>
- 
--<screen><userinput>grep -B4 '^ /usr/include' dummy.log</userinput></screen>
-+<screen><userinput>grep -B4 '^ /usr/local/include' dummy.log</userinput></screen>
- 
-     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"
-     href="adjusting.xml"
 Index: chapter06/ncurses.xml
 ===================================================================
 --- chapter06/ncurses.xml	(revision 10416)
