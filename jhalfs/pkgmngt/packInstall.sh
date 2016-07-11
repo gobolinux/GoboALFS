@@ -49,6 +49,7 @@ then
       libpipeline) appName="LibPipeline" ;;     # XXX: temporary workaround until recipe is in the store
       procps-ng)   appName="Procps-NG" ;;       # XXX: temporary workaround until recipe is in the store
       tzdata)      appName="TZData" ;;
+      xml-parser)  appName="Perl-XML-Parser" ;;
       bootscripts) appName="BootScripts-ALFS" ;;
       python2)     appName="Python" ;;
       serf)        appName="Serf" ;;
