@@ -56,6 +56,7 @@ then
       nettle)      appName="Nettle" ;;
       docbook-xsl) appName="DocBook-XSL" ;;
       html-tidy)   appName="HTML-Tidy" ;;
+      xz)          appName="XZ-Utils" ;;
       *)           ;;
   esac
   [ -z "${appName}" ] && echo "GoboLinux: Warning: $PACKAGE is not a known package name in GoboLinux" >&2 && appName="$PACKAGE"
