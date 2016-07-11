@@ -64,7 +64,7 @@ Index: common/libs/func_check_version.sh
    fi
    if [ -n "$MIN_Binutils_VER" ]; then
 -    check_version "$MIN_Binutils_VER"  "$(ld --version  | head -n1 | awk '{print $NF}')"    "BINUTILS"
-+    check_version "$MIN_Binutils_VER"  "$(ld --version | sed -n 's,.*Bin[^ ]* \([^.]*\.[^.]*\).*,\1,p')"    "BINUTILS"
++    check_version "$MIN_Binutils_VER"  "$(ld --version | sed -n 's,.*Bin[^0-9]*\([0-9]*\.[0-9]*\).*,\1,p')"    "BINUTILS"
    fi
    if [ -n "$MIN_Tar_VER" ]; then
      check_version "$MIN_Tar_VER"       "$(tar --version | head -n1 | cut -d" " -f4)"        "TAR"
