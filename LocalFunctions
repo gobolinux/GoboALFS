@@ -190,7 +190,7 @@ function InstallGoboPackage() {
     local snapshotDir="$(date +%Y%m%d)-SVN"
     local packageDir="$BUILDDIR/Programs/$appName/$snapshotDir"
     sudo mkdir -p "$packageDir"
-    sudo cp -R "$WORKDIR/ISO/LocalSVN/tools/$appName/"* "$packageDir/"
+    sudo cp -R "$WORKDIR/ISO/LocalGit/tools/$appName/"* "$packageDir/"
     sudo ln -fs "$snapshotDir" "$BUILDDIR/Programs/$appName/Current"
     sudo find "$packageDir" -name .svn -type d | xargs sudo rm -rf
     sudo cp -R "$packageDir/Resources/Defaults/Settings" "$packageDir/.."

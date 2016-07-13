@@ -249,7 +249,7 @@ then
     popd
 fi
     
-if [ ! -d "$WORKDIR/ISO/LocalSVN/tools" -o ! -d "$WORKDIR/ISO/Output/ROLayer" ]
+if [ ! -d "$WORKDIR/ISO/LocalGit/tools" -o ! -d "$WORKDIR/ISO/Output/ROLayer" ]
 then
     # Update the ISO environment
     mkdir -p "$WORKDIR/ISO"
