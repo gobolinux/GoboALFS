@@ -129,12 +129,6 @@ then
     popd > /dev/null
 fi
 
-if [ ! -e "$BUILDDIR/tools/bin/packInstall.sh" ]
-then
-    sudo cp "$WORKDIR/jhalfs-trunk/pkgmngt/packInstall.sh" "$BUILDDIR/tools/bin/packInstall-gobolinux.sh"
-    sudo chmod +x "$BUILDDIR/tools/bin/packInstall-gobolinux.sh"
-fi
-
 # Move left-over files to the packages where they belong
 
 MoveSettingsFile nsswitch.conf Glibc

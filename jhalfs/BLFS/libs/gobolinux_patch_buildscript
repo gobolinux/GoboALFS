@@ -32,7 +32,7 @@ function PatchBLFSScript() {
 
     # Invoke the GoboLinux-ALFS "package manager" script in the last ROOT_EOF block
     line1="export PATH=/bin:/sbin:/tools/bin"
-    line2="source /tools/bin/packInstall-gobolinux.sh"
+    line2="source /jhalfs/packInstall.sh"
     line3="PKGDIR=${appName}-${appVersion} PKG_DEST=/tmp/$appName packInstall"
     sed  -ri ":a;\$!{N;ba};s!^(.*\n?)^exit!\1$line1\n$line2\n$line3\nexit!" "$buildScript"
 
@@ -49,7 +49,7 @@ function PatchBLFSScript() {
             line1='sitepackages="/tmp/python2/usr/lib/python\$(echo \$PACKAGE | cut -d- -f2 | cut -d\. -f1-2)/site-packages"'
             line2='echo /System/Index/lib/python2.7/site-packages/ \> \$sitepackages/gobolinux.pth'
             line3='echo /System/Index/lib/python2.8/site-packages/ \> \$sitepackages/gobolinux.pth'
-            perl -pi -e "s,packInstall-gobolinux.sh,packInstall-gobolinux.sh\n$line1\n$line2,g" "$buildScript"
+            perl -pi -e "s,packInstall.sh,packInstall.sh\n$line1\n$line2,g" "$buildScript"
             ;;
         openssl)
             perl -pi -e "s,MANDIR=/tmp/openssl/usr/share/man MANSUFFIX=ssl install,MANDIR=/usr/share/man MANSUFFIX=ssl INSTALL_PREFIX=/tmp/$appName install,g" "$buildScript"
