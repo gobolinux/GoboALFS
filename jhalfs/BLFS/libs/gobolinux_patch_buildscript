@@ -40,7 +40,10 @@ function PatchBLFSScript() {
     case "$appName" in
         libffi)
             # 'make' on the root doesn't propagate to the subdir where 'install' is actually executed
-            perl -pi -e "s,make -j1 install,make -j1 -C $(uname -m)-pc-linux-gnu install,g" "$buildScript"
+            perl -pi -e "s,make -j1 install,make -j1 -C $(uname -m)-unknown-linux-gnu install,g" "$buildScript"
+            ;;
+        cacerts)
+            perl -pi -e "s,mkdir -p /tmp/cacerts/usr ,export PATH=/tmp/cacerts/usr/bin:/tmp/cacerts/usr/sbin:\\$PATH\nmkdir -p /tmp/cacerts/usr/bin /tmp/cacerts/usr/sbin ,g" "$buildScript"
             ;;
         apr)
             perl -pi -e "s,--with-installbuilddir=/tmp/apr,--with-installbuilddir=,g" "$buildScript"
