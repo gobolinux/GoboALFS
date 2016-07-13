@@ -29,7 +29,6 @@ esac
 #echo "PWD is:      $PWD" >&2
 
 # Guess GoboLinux package name
-local pkgnames="$(cat /tools/etc/GoboLinux_PackageNames.txt)"
 local appName="$PACKAGE"
 case "${appName}" in
   kernfs|chroot|creatingdirs|createfiles|adjusting|strippingagain|revisedchroot)
@@ -44,22 +43,27 @@ case "${appName}" in
 esac
 if [ ! -z "${appName}" ]
 then
-  appName=$(echo "${pkgnames}" | grep -i "^${appName}$" | head -n 1)
-  case "$appName" in
+  foundName=$(cat /tools/etc/GoboLinux_PackageNames.txt | grep -i "^${appName}$" | head -n 1)
+  if [ -n "${foundName}" ]
+  then
+     appName="${foundName}"
+  else
+    case "$appName" in
       libpipeline) appName="LibPipeline" ;;     # XXX: temporary workaround until recipe is in the store
       procps-ng)   appName="Procps-NG" ;;       # XXX: temporary workaround until recipe is in the store
       tzdata)      appName="TZData" ;;
       xml-parser)  appName="Perl-XML-Parser" ;;
       bootscripts) appName="BootScripts-ALFS" ;;
       python2)     appName="Python" ;;
+      python3)     appName="Python" ;;
       serf)        appName="Serf" ;;
       nettle)      appName="Nettle" ;;
       docbook-xsl) appName="DocBook-XSL" ;;
       html-tidy)   appName="HTML-Tidy" ;;
       xz)          appName="XZ-Utils" ;;
-      *)           ;;
-  esac
-  [ -z "${appName}" ] && echo "GoboLinux: Warning: $PACKAGE is not a known package name in GoboLinux" >&2 && appName="$PACKAGE"
+      *)           echo "GoboLinux: Warning: $PACKAGE is not a known package name in GoboLinux" >&2 ;;
+    esac
+  fi
 fi
 
 pushd $PKG_DEST
