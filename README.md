@@ -15,6 +15,9 @@ Your host system must have the following development packages:
 * xsltproc
 * docbook2x
 * libncurses5-dev
+* texinfo
+* git
+* autoconf
 
 Also, the `lfs` user and group must exist. Please make sure that
 the `lfs` user has sudo privileges.
