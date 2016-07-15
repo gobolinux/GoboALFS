@@ -170,7 +170,7 @@ function InChroot() {
     (
         sudo mount -o bind /proc "$BUILDDIR/proc"
         sudo mount -o bind /dev "$BUILDDIR/dev"
-        export PATH=/bin:/sbin
+        export PATH=/bin:/sbin:/usr/bin:/usr/sbin
         export NO_UNIONFS=yes
         export SUDO_OK=1
 
