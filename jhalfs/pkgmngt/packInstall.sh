@@ -61,6 +61,8 @@ then
       docbook-xsl) appName="DocBook-XSL" ;;
       html-tidy)   appName="HTML-Tidy" ;;
       xz)          appName="XZ-Utils" ;;
+      eudev)       appName="Eudev" ;;
+      cacerts)     appName="CAcerts" ;;
       *)           echo "GoboLinux: Warning: $PACKAGE is not a known package name in GoboLinux" >&2 ;;
     esac
   fi
