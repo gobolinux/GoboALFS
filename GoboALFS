@@ -242,15 +242,14 @@ then
     git clone https://github.com/gobolinux/BuildLiveCD
     popd
 fi
-    
-if [ ! -d "$WORKDIR/ISO/LocalGit/tools" -o ! -d "$WORKDIR/ISO/Output/ROLayer" ]
+
+if [ ! -d "$WORKDIR/ISO/LocalGit/tools" ]
 then
-    # Update the ISO environment
-    mkdir -p "$WORKDIR/ISO"
-    pushd "$WORKDIR/ISO" > /dev/null
-    ln -fs ../Packages .
-    livecdDataDir="$WORKDIR/BuildLiveCD/Data" "$WORKDIR/BuildLiveCD/bin/UpdateEnvironment"
-    popd > /dev/null
+    mkdir -p "$WORKDIR/ISO/LocalGit/tools"
+    pushd "$WORKDIR/ISO/LocalGit/tools"
+    git clone https://github.com/gobolinux/Scripts
+    git clone https://github.com/gobolinux/Compile
+    popd
 fi
 
 if [ ! -d "$BUILDDIR/Programs/Compile" ]
@@ -276,6 +275,21 @@ then
         sudo mv "$libxml2Dir/bin/xmlcatalog" "$libxml2Dir/bin/real_xmlcatalog"
         InChroot SymlinkProgram LibXML2 "$libxml2Version"
     fi
+fi
+
+if [ ! -d "$WORKDIR/ISO/Output/ROLayer" ]
+then
+    # Update the ISO environment
+    pushd "$WORKDIR/ISO" > /dev/null
+    ln -fs ../Packages .
+    (
+        export PATH="$PATH:$BUILDDIR/Programs/Scripts/Current/bin:$BUILDDIR/Programs/Compile/Current/bin"
+        export goboPrefix="$BUILDDIR"
+        export livecdDataDir="$WORKDIR/BuildLiveCD/Data"
+        source "$BUILDDIR/Programs/Scripts/Current/bin/GoboPath"
+        "$WORKDIR/BuildLiveCD/bin/UpdateEnvironment"
+    )
+    popd > /dev/null
 fi
 
 # Compile extra packages needed to run Compile and to boot the ISO nicely
