@@ -3,8 +3,8 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
   "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 <!ENTITY gobolinux-repository "http://lucasvr.gobolinux.org/gobolinux/">
-<!ENTITY bootstrap-url "&gobolinux-repository;gobolinux_alfs-1.1.tar.gz">
-<!ENTITY bootstrap-md5 "f0b50934af2daed103e07aa36bfadf76">
+<!ENTITY bootstrap-url "&gobolinux-repository;gobolinux_alfs-1.2.tar.gz">
+<!ENTITY bootstrap-md5 "e6f7f9f6bcf97db7053d30270dd6537c">
 ]>
 
 <article>
