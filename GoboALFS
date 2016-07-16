@@ -73,6 +73,11 @@ then
     exit 1
 fi
 
+if [ ! -e /dev/fuse ]
+then
+    echo "/dev/fuse has not been found. Please run 'modprobe fuse' and try again."
+    exit 1
+fi
 
 ###################################################################################################
 ### Operation -- LFS part of the script
@@ -293,9 +298,8 @@ then
 fi
 
 # Compile extra packages needed to run Compile and to boot the ISO nicely
-unset recompileShadow
 for appName in \
-    Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools \
+    Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs Parted SYSLINUX \
     Atool Htop Mdadm PowerTOP
 do
