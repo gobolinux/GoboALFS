@@ -224,6 +224,7 @@ function Create_Device_Nodes() {
    create_node tty6    c 4 6
    create_node ttyS0   c 4 64
    create_node urandom c 1 9
+   create_node fuse    c 10 229 0666
 }
 
 Undo_Legacy_Tree "yes"
