@@ -178,11 +178,13 @@ function InChroot() {
         sudo rm -f "$BUILDDIR/etc/mtab"
         sudo touch "$BUILDDIR/etc/mtab"
         sudo -E chroot "$BUILDDIR" $@
-        
+        ret=$?
+
         sync
         sleep 1
         sudo umount "$BUILDDIR/dev"
         sudo umount "$BUILDDIR/proc"
+        exit $ret
     )
 }
 

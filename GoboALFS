@@ -301,7 +301,7 @@ for appName in \
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
-        InChroot Compile --no-sign --symlink=no "$appName"
+        InChroot Compile --no-sign --symlink=no "$appName" || exit 1
         InChroot SymlinkProgram -c overwrite "$appName"
         if [ "$appName" = "Linux-PAM" ]
         then
@@ -316,7 +316,12 @@ CreatePackageList "Base"
 function CompileExtras() {
     local listname="$1"
     shift
-    for appName in $@; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
+    for appName in $@; do
+        if [ ! -d "$BUILDDIR/Programs/$appName" ]
+        then
+            InChroot Compile --no-sign "$appName" || exit 1
+        fi
+    done
     CreatePackageList "$listname"
 }
  
