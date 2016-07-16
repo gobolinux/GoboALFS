@@ -60,16 +60,18 @@ function Create_Filesystem_Tree() {
       create_dir $root/System/Index/include
       create_dir $root/System/Index/share/man
       create_dir $root/System/Index/share/info
+      create_dir $root/System/Tasks
+      create_dir $root/System/Environment
       variabledir="Data/Variable"
       filesdir="Data"
    else
       create_dir $root/Depot
+      create_dir $root/System/Links/Tasks
+      create_dir $root/System/Links/Environment
       variabledir="System/Variable"
       filesdir="Files"
    fi
 
-   create_dir $root/System/Links/Tasks
-   create_dir $root/System/Links/Environment
    create_dir $root/$variabledir/log
    create_dir $root/$variabledir/tmp 0 a+wt
    create_dir $root/$variabledir/mail
