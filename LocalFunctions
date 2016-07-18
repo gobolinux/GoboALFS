@@ -170,29 +170,32 @@ function InChroot() {
     (
         sudo mount -o bind /proc "$BUILDDIR/proc"
         sudo mount -o bind /dev "$BUILDDIR/dev"
-        export PATH=/bin:/sbin
-        export NO_UNIONFS=yes
+        export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+        #export NO_UNIONFS=yes
         export SUDO_OK=1
+        export goboTemp=/tmp
 
         sudo rm -f "$BUILDDIR/etc/mtab"
         sudo touch "$BUILDDIR/etc/mtab"
-        sudo chroot "$BUILDDIR" $@
-        
+        sudo -E chroot "$BUILDDIR" $@
+        ret=$?
+
         sync
         sleep 1
         sudo umount "$BUILDDIR/dev"
         sudo umount "$BUILDDIR/proc"
+        exit $ret
     )
 }
 
 function InstallGoboPackage() {
     local appName="$1"
-    local snapshotDir="$(date +%Y%m%d)-SVN"
+    local snapshotDir="$(date +%Y%m%d)-GIT"
     local packageDir="$BUILDDIR/Programs/$appName/$snapshotDir"
     sudo mkdir -p "$packageDir"
     sudo cp -R "$WORKDIR/ISO/LocalGit/tools/$appName/"* "$packageDir/"
     sudo ln -fs "$snapshotDir" "$BUILDDIR/Programs/$appName/Current"
-    sudo find "$packageDir" -name .svn -type d | xargs sudo rm -rf
+    sudo rm -rf "$packageDir/.git"
     sudo cp -R "$packageDir/Resources/Defaults/Settings" "$packageDir/.."
     InChroot make -C "/Programs/$appName/$snapshotDir"
     InChroot /tools/bin/SymlinkProgram -c overwrite $appName

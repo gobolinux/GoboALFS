@@ -73,6 +73,11 @@ then
     exit 1
 fi
 
+if [ ! -e /dev/fuse ]
+then
+    echo "/dev/fuse has not been found. Please run 'modprobe fuse' and try again."
+    exit 1
+fi
 
 ###################################################################################################
 ### Operation -- LFS part of the script
@@ -115,7 +120,7 @@ then
     popd > /dev/null
 fi
 
-if [ ! -d "$BUILDDIR/Programs/BootScripts-ALFS" ]
+if [ ! -d "$BUILDDIR/Programs/BootScripts-ALFS" -o ! -d "$BUILDDIR/Programs/LibXML2" ]
 then
     pushd "$WORKDIR/jhalfs-trunk" > /dev/null
     echo "Running menuconfig."
@@ -132,7 +137,7 @@ fi
 # Move left-over files to the packages where they belong
 
 MoveSettingsFile nsswitch.conf Glibc
-MoveSettingsFile udev/hwdb.bin Udev
+MoveSettingsFile udev/hwdb.bin Eudev
 MoveSettingsFile inittab BootScripts-ALFS
 MoveSettingsFile syslog.conf Sysklogd
 
@@ -179,18 +184,18 @@ then
     echo nameserver 208.67.222.222 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
     echo nameserver 208.67.220.220 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
 fi
-sudoers_file="$BUILDDIR/Programs/Sudo/Current/Resources/Defaults/Settings/sudoers"
-if sudo grep -q "^root" "$sudoers_file"
+eudevVersion=$(ls "$BUILDDIR/Programs/Eudev/" 2> /dev/null | grep -v "Settings\|Current")
+if [ -z "$eudevVersion" ]
 then
-    sudo perl -pi -e "s/^root/gobo/g" "$sudoers_file"
+    echo "ERROR: Eudev has not been found at $BUILDDIR/Programs/Eudev/"
+    exit 1
 fi
-udevVersion=$(ls "$BUILDDIR/Programs/Udev/" | grep -v "Settings\|Current")
-for rulefile in "$BUILDDIR/Programs/Udev/$udevVersion/Resources/Defaults/Settings/udev/rules.d"/*
+for rulefile in "$BUILDDIR/Programs/Eudev/$eudevVersion/Resources/Defaults/Settings/udev/rules.d"/*
 do
     grep -q "pci-db" "$rulefile" && sudo perl -pi -e "s,pci-db,hwdb --subsystem=pci,g" "$rulefile"
     grep -q "usb-db" "$rulefile" && sudo perl -pi -e "s,usb-db,hwdb --subsystem=usb,g" "$rulefile"
 done
-sudo rm -f "$BUILDDIR/Programs/Udev/$udevVersion/Resources/Defaults/Settings/udev/rules.d/55-lfs.rules"
+sudo rm -f "$BUILDDIR/Programs/Eudev/$eudevVersion/Resources/Defaults/Settings/udev/rules.d/55-lfs.rules"
 
 # Make sure we have /bin/sh
 
@@ -242,15 +247,14 @@ then
     git clone https://github.com/gobolinux/BuildLiveCD
     popd
 fi
-    
-if [ ! -d "$WORKDIR/ISO/LocalGit/tools" -o ! -d "$WORKDIR/ISO/Output/ROLayer" ]
+
+if [ ! -d "$WORKDIR/ISO/LocalGit/tools" ]
 then
-    # Update the ISO environment
-    mkdir -p "$WORKDIR/ISO"
-    pushd "$WORKDIR/ISO" > /dev/null
-    ln -fs ../Packages .
-    livecdDataDir="$WORKDIR/BuildLiveCD/Data" "$WORKDIR/BuildLiveCD/bin/UpdateEnvironment"
-    popd > /dev/null
+    mkdir -p "$WORKDIR/ISO/LocalGit/tools"
+    pushd "$WORKDIR/ISO/LocalGit/tools"
+    git clone https://github.com/gobolinux/Scripts
+    git clone https://github.com/gobolinux/Compile
+    popd
 fi
 
 if [ ! -d "$BUILDDIR/Programs/Compile" ]
@@ -278,16 +282,30 @@ then
     fi
 fi
 
+if [ ! -d "$WORKDIR/ISO/Output/ROLayer" ]
+then
+    # Update the ISO environment
+    pushd "$WORKDIR/ISO" > /dev/null
+    ln -fs ../Packages .
+    (
+        export PATH="$PATH:$BUILDDIR/Programs/Scripts/Current/bin:$BUILDDIR/Programs/Compile/Current/bin"
+        export goboPrefix="$BUILDDIR"
+        export livecdDataDir="$WORKDIR/BuildLiveCD/Data"
+        source "$BUILDDIR/Programs/Scripts/Current/bin/GoboPath"
+        "$WORKDIR/BuildLiveCD/bin/UpdateEnvironment"
+    )
+    popd > /dev/null
+fi
+
 # Compile extra packages needed to run Compile and to boot the ISO nicely
-unset recompileShadow
 for appName in \
-    Git Perl GoboHide Linux Fuse CMake UnionFS-Fuse Help2Man Net-Tools \
+    Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs Parted SYSLINUX \
     Atool Htop Mdadm PowerTOP
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
-        InChroot Compile --no-sign --symlink=no "$appName"
+        InChroot Compile --no-sign --symlink=no "$appName" || exit 1
         InChroot SymlinkProgram -c overwrite "$appName"
         if [ "$appName" = "Linux-PAM" ]
         then
@@ -302,7 +320,12 @@ CreatePackageList "Base"
 function CompileExtras() {
     local listname="$1"
     shift
-    for appName in $@; do [ ! -d "$BUILDDIR/Programs/$appName" ] && InChroot Compile --no-sign "$appName"; done
+    for appName in $@; do
+        if [ ! -d "$BUILDDIR/Programs/$appName" ]
+        then
+            InChroot Compile --no-sign "$appName" || exit 1
+        fi
+    done
     CreatePackageList "$listname"
 }
  
