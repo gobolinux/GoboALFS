@@ -7,9 +7,21 @@
 # Lucas C. Villa Real <lucasvr@gobolinux.org>
 ################################################################################
 
-if [ $# != 1 ]
+if [ "$1" = "--batch" ]
 then
-    echo "Usage: $0 <workdir>"
+   arg="$2"
+   batch=yes
+elif [ "$2" = "--batch" ]
+then
+   arg="$1"
+   batch=yes
+else
+   arg="$1"
+fi
+
+if [ "$arg" = "" ]
+then
+    echo "Usage: $0 [--batch] <workdir>"
     echo
     echo "<workdir> must be an initially empty directory. It will be populated with the"
     echo "JHALFS tree, compiled packages and with the ISO development files."
@@ -17,7 +29,7 @@ then
     exit 1
 fi
 
-WORKDIR=$(readlink -f "$1")
+WORKDIR=$(readlink -f "$arg")
 SVNDIR=$(readlink -f $(dirname "$0"))
 PATCHES=(
     $SVNDIR/01-gobolinux-jhalfs.patch
@@ -96,7 +108,7 @@ mkdir -p "$SRC_ARCHIVE"
 if [ ! -d "$WORKDIR/jhalfs-trunk" ]
 then
     echo "Downloading JHALFS from Subversion"
-	svn co svn://svn.linuxfromscratch.org/ALFS/jhalfs/trunk "$WORKDIR/jhalfs-trunk"
+    svn co svn://svn.linuxfromscratch.org/ALFS/jhalfs/trunk "$WORKDIR/jhalfs-trunk"
 
     mkdir -p "$WORKDIR/jhalfs-trunk/custom"
     pushd "$WORKDIR/jhalfs-trunk" > /dev/null
@@ -124,13 +136,14 @@ if [ ! -d "$BUILDDIR/Programs/BootScripts-ALFS" -o ! -d "$BUILDDIR/Programs/LibX
 then
     pushd "$WORKDIR/jhalfs-trunk" > /dev/null
     echo "Running menuconfig."
-    make menuconfig LIBS="-lncurses -ltinfo"
+    # E for exit, Y for yes
+    BatchRun "ey" make menuconfig LIBS="-lncurses -ltinfo"
 
     echo "Processing JHALFS configuration file"
     perl -pi -e "s,^BUILDDIR=.*,BUILDDIR=\"$BUILDDIR\",g" configuration
     [ -d "/Users" ] && perl -pi -e 's,LHOME=.*,LHOME=\"/Users\",g' configuration
 
-    ./jhalfs run || exit 1
+    BatchRun "yes\n" ./jhalfs run || exit 1
     popd > /dev/null
 fi
 

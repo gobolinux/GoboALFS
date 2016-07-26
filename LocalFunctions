@@ -1,5 +1,19 @@
 #!/bin/bash (source)
 
+function BatchRun() {
+    local keystrokes="$1"
+    shift
+    if [ "$batch" = "yes" ]
+    then
+        echo -en "$keystrokes" | "$@"
+        local x=$?
+        return $x
+    else
+        "$@"
+        return $?
+    fi
+}
+
 function MoveSettingsFile() {
     local settingsFile="$1"
     local programName="$2"
