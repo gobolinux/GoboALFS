@@ -122,3 +122,15 @@ Index: BLFS/gen_pkg_book.sh
 +for i in ./scripts/*; do PatchBLFSScript "$i"; done
 +
  #clean_configuration
+Index: BLFS/gen-makefile.sh
+===================================================================
+--- BLFS/gen-makefile.sh	2016-07-27 20:57:17.275749435 -0300
++++ BLFS/gen-makefile.sh	2016-07-27 20:58:15.343156474 -0300
+@@ -42,6 +42,7 @@
+ #----------------------------------#
+ (
+ cat << EOF
++	mkdir -p logs
+ 	@source ${TOPDIR}/envars.conf && ${BUILD_SCRIPTS}/\$@ >logs/\$@ 2>&1
+ EOF
+ ) >> $MKFILE.tmp
