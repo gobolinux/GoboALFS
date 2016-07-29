@@ -331,7 +331,7 @@ do
         then
             # Recompile Shadow with Linux-PAM support
             shadowVersion=$(ls "$BUILDDIR/Programs/Shadow/" | grep -v "Settings\|Current")
-            InChroot Compile --batch --no-sign Shadow $shadowVersion
+            InChroot Compile --batch --no-sign Shadow $shadowVersion || exit 1
         fi
     fi
 done
