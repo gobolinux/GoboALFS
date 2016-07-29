@@ -252,6 +252,13 @@ then
     sudo rm -rf "$BUILDDIR/root/.cpan"
 fi
 
+libtoolVersion=$(ls $BUILDDIR/Programs/LibTool 2> /dev/null | grep -v "Settings\|Current")
+if [ -e "$BUILDDIR/Programs/LibTool/$libtoolVersion/bin/libtool" ]
+then
+    sudo perl -pi -e 's,func_fatal_error \"error: cannot install.*,/bin/true,g' \
+        "$BUILDDIR/Programs/LibTool/$libtoolVersion/bin/libtool"
+fi
+
 # Checkout GoboLinux scripts
 
 if [ ! -d "$WORKDIR/BuildLiveCD" ]
