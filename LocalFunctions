@@ -210,3 +210,22 @@ function InstallGoboPackage() {
     InChroot make -C "/Programs/$appName/$snapshotDir"
     InChroot /tools/bin/SymlinkProgram -c overwrite $appName
 }
+
+function SanityCheckProgram() {
+    local programName="$1"
+    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v "Current\|Settings")
+    local retval=0
+    pushd "$BUILDDIR/Programs" > /dev/null
+    if [ -d "${programName}/${programVersion}/man" ]
+    then
+        echo "*** Error: $programName/$programVersion has a misplaced man/ directory"
+        retval=1
+    fi
+    if [ -d "${programName}/${programVersion}/Shared" ]
+    then
+        echo "*** Error: $programName/$programVersion has a legacy Shared directory"
+        retval=1
+    fi
+    popd > /dev/null
+    return $retval
+}
