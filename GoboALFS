@@ -327,12 +327,12 @@ do
     then
         InChroot Compile --batch --no-sign --symlink=no "$appName" || exit 1
         InChroot SymlinkProgram -c overwrite "$appName"
-        if [ "$appName" = "Linux-PAM" ]
-        then
-            # Recompile Shadow with Linux-PAM support
-            shadowVersion=$(ls "$BUILDDIR/Programs/Shadow/" | grep -v "Settings\|Current")
-            InChroot Compile --batch --no-sign Shadow $shadowVersion || exit 1
-        fi
+    fi
+    if [ -d "$BUILDDIR/Programs/Linux-PAM" ] && [ ! -e "$BUILDDIR/Programs/Shadow/Current" ]
+    then
+        # Recompile Shadow with Linux-PAM support
+        shadowVersion=$(ls "$BUILDDIR/Programs/Shadow/" | grep -v "Settings\|Current")
+        InChroot Compile --batch --no-sign Shadow $shadowVersion || exit 1
     fi
 done
 CreatePackageList "Base"
