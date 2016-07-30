@@ -319,13 +319,13 @@ fi
 # Compile extra packages needed to run Compile and to boot the ISO nicely
 for appName in \
     Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
-    Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs Parted SYSLINUX \
+    Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs LVM2 Parted SYSLINUX \
     Atool Htop Mdadm LibNL PowerTOP
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
         InChroot Compile --batch --no-sign --symlink=no "$appName" || exit 1
-        InChroot SymlinkProgram -c overwrite "$appName"
+        InChroot SymlinkProgram -u install -c overwrite "$appName"
         SanityCheckProgram "$appName" || exit 1
     fi
     if [ -d "$BUILDDIR/Programs/Linux-PAM" ] && [ ! -e "$BUILDDIR/Programs/Shadow/Current" ]
