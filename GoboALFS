@@ -238,6 +238,7 @@ then
         sudo ln -s System/Kernel/Devices "$BUILDDIR/dev"
     fi
 fi
+CreatePackageList "LFS"
 
 
 ###################################################################################################
