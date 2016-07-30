@@ -321,7 +321,7 @@ fi
 for appName in \
     Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs Parted SYSLINUX \
-    Atool Htop Mdadm
+    Atool Htop Mdadm LibNL PowerTOP
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
