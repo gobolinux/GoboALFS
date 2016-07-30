@@ -193,9 +193,7 @@ then
 fi
 if grep -q "EDITME" "$BUILDDIR/System/Settings/resolv.conf"
 then
-    sudo rm -f "$BUILDDIR/System/Settings/resolv.conf"
-    echo nameserver 208.67.222.222 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
-    echo nameserver 208.67.220.220 | sudo tee -a "$BUILDDIR/System/Settings/resolv.conf" > /dev/null
+    sudo cp /etc/resolv.conf "$BUILDDIR/System/Settings/resolv.conf"
 fi
 eudevVersion=$(ls "$BUILDDIR/Programs/Eudev/" 2> /dev/null | grep -v "Settings\|Current")
 if [ -z "$eudevVersion" ]
@@ -216,7 +214,7 @@ if [ ! -e "$BUILDDIR/bin/sh" ]
 then
     bashVersion=$(ls $BUILDDIR/Programs/Bash | grep -v "Settings\|Current")
     sudo ln -sf "bash" "$BUILDDIR/Programs/Bash/$bashVersion/bin/sh"
-    sudo ln -sf "/Programs/Bash/$bashVersion/bin/sh" "$BUILDDIR/System/Links/Executables/sh"
+    sudo ln -sf "/Programs/Bash/$bashVersion/bin/sh" "$BUILDDIR/bin/sh"
 fi
 
 # Fix /proc and /dev
