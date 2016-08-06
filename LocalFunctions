@@ -216,6 +216,11 @@ function SanityCheckProgram() {
     local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v "Current\|Settings")
     local retval=0
     pushd "$BUILDDIR/Programs" > /dev/null
+    if [ -d "${programName}/${programVersion}/etc" ]
+    then
+        echo "*** Error: $programName/$programVersion has an etc/ directory"
+        retval=1
+    fi
     if [ -d "${programName}/${programVersion}/man" ]
     then
         echo "*** Error: $programName/$programVersion has a misplaced man/ directory"
