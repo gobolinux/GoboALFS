@@ -111,8 +111,8 @@ SET_GROUP=""
 SET_HOME=""
 LUSER="lfs"
 LGROUP="lfs"
-LHOME="/Users"
-BUILDDIR="/Data/ChrootCompile/WorkDirectory/RootFS"
+LHOME="/home"
+BUILDDIR="/GoboLinux/RootFS"
 GETPKG=y
 SRC_ARCHIVE="$SRC_ARCHIVE"
 # RETRYSRCDOWNLOAD is not set
