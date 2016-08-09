@@ -380,7 +380,7 @@ then
     do
         for appVersion in $(ls $appName/ | grep -v "Current\|Settings" | sort -n)
         do
-            echo "$appVersion" | grep -q "SVN" || continue
+            echo "$appVersion" | grep -q "GIT" || continue
             appVersionAlone=$(echo "$appVersion" | sed 's,[-A-Z],,g')
             today=`date +%Y%m%d`
             timeofday=`date +%H%M`
