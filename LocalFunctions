@@ -185,6 +185,12 @@ function InChroot() {
         export SUDO_OK=1
         export goboTemp=/tmp
 
+        if [ -e "$BUILDDIR/System/Environment/Cache" ]
+        then
+            # Loading environment variables is vital so that XML catalogs can be found
+            source "$BUILDDIR/System/Environment/Cache"
+        fi
+
         sudo rm -f "$BUILDDIR/etc/mtab"
         sudo touch "$BUILDDIR/etc/mtab"
         sudo -E chroot "$BUILDDIR" $@
