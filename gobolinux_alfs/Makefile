@@ -6,7 +6,7 @@ REPOSITORY = http://recipes.gobolinux.org/r/recipes
 all: FindBroken SymlinkProgram PackageNames.txt
 
 clean:
-	@rm -f *.o *~ FindBroken SymlinkProgram PackageNames.txt
+	@rm -f *.o *~ FindBroken SymlinkProgram
 
 install:
 	@cp -v CreateGoboLinuxTree FindBroken SymlinkProgram /tools/bin
