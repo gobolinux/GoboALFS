@@ -907,6 +907,7 @@ GTK-Murrine-Engine
 GTK-QT-Engine
 GTK-RecordMyDesktop
 GTK-Sharp
+GTK-Unico-Engine
 GTK-XFCE-Engine
 GTK-theme-switch
 GTKHTML
@@ -1179,6 +1180,7 @@ HotwayD
 Howl
 Hpijs
 Hplip
+Hsakmt
 HtDig
 Htop
 Httplib2
@@ -1275,6 +1277,7 @@ JED
 JFSUtils
 JMTPFS
 JPEG
+JQ
 JRE
 JSON-GLib
 JUnit
@@ -1673,6 +1676,7 @@ LibIODBC
 LibISOBurn
 LibISOfs
 LibIconv
+LibInput
 LibIptcdata
 LibIrman
 LibKDEEdu
@@ -1819,6 +1823,7 @@ LibWNCK
 LibWPD
 LibWPG
 LibWPS
+LibWacom
 LibWebP
 LibWindowsWM
 LibX11
@@ -1853,6 +1858,7 @@ LibXevie
 LibXext
 LibXfixes
 LibXfont
+LibXfont2
 LibXfontcache
 LibXft
 LibXi
@@ -1860,6 +1866,7 @@ LibXinerama
 LibXmu
 LibXp
 LibXpm
+LibXpresent
 LibXprintAppUtil
 LibXprintUtil
 LibXrender
@@ -2166,6 +2173,7 @@ Netkit-Base
 Netkit-Telnet
 Netpbm
 Netrik
+Nettle
 Netwatch
 NetworkManager
 Neverball
@@ -3074,6 +3082,7 @@ URLView
 USB-ModeSwitch
 USB-Robot
 USBLogDump
+USBRedir
 USBUtils
 UTFTPD
 UVCCapture
@@ -3084,6 +3093,7 @@ Udis86
 Ufiformat
 UltimateStunts
 Umbrello
+Unbound
 Uncrustify
 Uniconvertor
 Unifdef
@@ -3218,6 +3228,7 @@ XCB-Demo
 XCB-Proto
 XCB-Util
 XCB-Util-Cursor
+XCB-Util-Errors
 XCB-Util-Image
 XCB-Util-Keysyms
 XCB-Util-Renderutil
@@ -3267,6 +3278,8 @@ XF86-Input-Hyperpen
 XF86-Input-JamStudio
 XF86-Input-Joystick
 XF86-Input-Keyboard
+XF86-Input-Libinput
+XF86-Input-MTrack
 XF86-Input-Magellan
 XF86-Input-MagicTouch
 XF86-Input-MicroTouch
@@ -3284,6 +3297,7 @@ XF86-Input-VmMouse
 XF86-Input-Void
 XF86-Input-Wacom
 XF86-Video-AMD
+XF86-Video-AMDGPU
 XF86-Video-APM
 XF86-Video-ARK
 XF86-Video-AST
@@ -3310,6 +3324,7 @@ XF86-Video-Newport
 XF86-Video-Nouveau
 XF86-Video-Omap
 XF86-Video-Openchrome
+XF86-Video-Opentegra
 XF86-Video-QXL
 XF86-Video-R128
 XF86-Video-RadeonHD
