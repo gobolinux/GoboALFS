@@ -132,12 +132,17 @@ then
     popd > /dev/null
 fi
 
-if [ ! -d "$BUILDDIR/Programs/BootScripts-ALFS" -o ! -d "$BUILDDIR/Programs/LibXML2" ]
+if [ ! -e "$BUILDDIR/blfs_root/work/.done" ]
 then
     pushd "$WORKDIR/jhalfs-trunk" > /dev/null
-    echo "Running menuconfig."
-    # E for exit, Y for yes
-    BatchRun "ey" make menuconfig LIBS="-lncurses -ltinfo"
+    if [ "$batch" = "yes" ]
+    then
+        yes "" | make config
+    else
+        echo "Running menuconfig."
+        # E for exit, Y for yes
+        BatchRun "ey" make menuconfig LIBS="-lncurses -ltinfo"
+    fi
 
     echo "Processing JHALFS configuration file"
     perl -pi -e "s,^BUILDDIR=.*,BUILDDIR=\"$BUILDDIR\",g" configuration
@@ -145,6 +150,7 @@ then
 
     BatchRun "yes\n" ./jhalfs run || exit 1
     popd > /dev/null
+    echo "LFS/BLFS processing complete" > "$BUILDDIR/blfs_root/work/.done"
 fi
 
 # Move left-over files to the packages where they belong
