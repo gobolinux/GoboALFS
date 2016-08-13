@@ -1,19 +1,30 @@
 #!/bin/bash
 
-WORKDIR=$(readlink -f $(dirname "$0")/../WorkDirectory)
+WORKDIR=/GoboLinux
 BUILDDIR=$WORKDIR/RootFS
 
-sudo mount -o bind /sys "$BUILDDIR/sys"
-sudo mount -o bind /proc "$BUILDDIR/proc"
-sudo mount -o bind /dev "$BUILDDIR/dev"
+if [ $UID = 0 ]
+then SUDO=
+else SUDO=sudo
+fi
 
-export PATH=/bin:/sbin
+umount_sys=
+umount_proc=
+umount_dev=
+mountpoint -q "$BUILDDIR/sys"  || { $SUDO mount -o bind /sys "$BUILDDIR/sys"; umount_sys=yes; }
+mountpoint -q "$BUILDDIR/proc" || { $SUDO mount -o bind /proc "$BUILDDIR/proc" umount_proc=yes; }
+mountpoint -q "$BUILDDIR/dev"  || { $SUDO mount -o bind /dev "$BUILDDIR/dev"; umount_dev=yes; }
+
+export PATH=/bin:/sbin:$PATH
 export SUDO_OK=1
+export SUDO_PS1="[\u@gobolinux-chroot \W]\$"
 unset LC_ALL
 unset LANG
 unset LANGUAGE
 
-sudo chroot "$BUILDDIR" /bin/bash
-sudo umount "$BUILDDIR/dev"
-sudo umount "$BUILDDIR/proc"
-sudo umount "$BUILDDIR/sys"
+$SUDO chroot "$BUILDDIR" /bin/bash
+
+
+[ "$umount_dev" = "yes" ]  && $SUDO umount "$BUILDDIR/dev"
+[ "$umount_proc" = "yes" ] && $SUDO umount "$BUILDDIR/proc"
+[ "$umount_sys" = "yes" ]  && $SUDO umount "$BUILDDIR/sys"
