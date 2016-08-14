@@ -68,7 +68,7 @@ then
   fi
 fi
 
-pushd $PKG_DEST
+pushd $PKG_DEST || exit 1
 rm -fv ./usr/share/info/dir  # recommended since this directory is already there
                              # on the system
 
@@ -91,6 +91,18 @@ rm -rf var
 
 [ $(ls | wc -l | awk {'print $1'}) -gt 0 ] && cp -Ra * "$target/"
 rm -rf *
+
+if [ -d "$target/lib64" ]
+then
+    # Merge lib64 and lib
+    if [ -d "$target/lib" ]
+    then
+        cp -Ra $target/lib64/* $target/lib/
+        rm -rf $target/lib64
+    else
+        mv $target/lib64 $target/lib
+    fi
+fi
 
 if [ -d "$target/etc" ]
 then
