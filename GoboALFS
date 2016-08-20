@@ -330,7 +330,7 @@ for appName in \
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
-        InChroot Compile --batch --no-sign --symlink=no "$appName" || exit 1
+        InChroot Compile --batch --no-sign "$appName" || exit 1
         InChroot SymlinkProgram -u install -c overwrite "$appName"
         SanityCheckProgram "$appName" || exit 1
     fi
