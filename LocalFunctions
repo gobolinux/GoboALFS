@@ -188,6 +188,7 @@ function InChroot() {
         if [ -e "$BUILDDIR/System/Environment/Cache" ]
         then
             # Loading environment variables is vital so that XML catalogs can be found
+            export PATH="$PATH:$BUILDDIR/Programs/Scripts/Current/bin"
             source "$BUILDDIR/System/Environment/Cache"
         fi
 
