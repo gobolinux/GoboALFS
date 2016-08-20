@@ -97,10 +97,10 @@ then
     # Merge lib64 and lib
     if [ -d "$target/lib" ]
     then
-        cp -Ra $target/lib64/* $target/lib/
-        rm -rf $target/lib64
+        cp -Ra "$target/lib64/"* "$target/lib/"
+        rm -rf "$target/lib64"
     else
-        mv $target/lib64 $target/lib
+        mv "$target/lib64" "$target/lib"
     fi
 fi
 
