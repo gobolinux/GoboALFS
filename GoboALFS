@@ -344,6 +344,27 @@ do
 done
 CreatePackageList "Base"
 
+# BLFS installs DocBook and DocBook-XSL, both featuring broken catalog files.
+#
+# Since we have replacements for these packages (named DocBook-XML-DTD and
+# DocBook-XSL-Stylesheets, respectively), we stick with our own.
+#
+# Note that differently from BLFS, we ship our catalog files under /var/lib/xml
+# rather than /etc/xml.
+
+if [ -d "$BUILDDIR/Programs/DocBook" ]
+then
+    InChroot RemoveProgram -u remove DocBook
+    InChroot SymlinkProgram -u install -c overwrite DocBook-XML-DTD
+    RemoveFromPackageList "LFS" "DocBook"
+fi
+if [ -d "$BUILDDIR/Programs/DocBook-XSL" ]
+then
+    InChroot RemoveProgram -u remove DocBook-XSL
+    InChroot SymlinkProgram -u install -c overwrite DocBook-XSL-Stylesheets
+    RemoveFromPackageList "LFS" "DocBook-XSL"
+fi
+
 function CompileExtras() {
     local listname="$1"
     shift

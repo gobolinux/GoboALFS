@@ -81,6 +81,12 @@ function IsBlacklisted() {
     }
 }
 
+function RemoveFromPackageList() {
+    local packageList="$WORKDIR/BuildLiveCD/Data/Packages-List-${1}"
+    local packageName="$2"
+    cat "${packageList}" | grep -v "^${packageName}$" > "${packageList}.new" && mv "${packageList}.new" "${packageList}"
+}
+
 function CreatePackageList() {
     local packageList="$WORKDIR/BuildLiveCD/Data/Packages-List-${1}"
     if [ -e "$packageList" ] && [ $(stat -c "%s" "$packageList") -gt 0 ]
