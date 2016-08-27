@@ -176,6 +176,15 @@ then
     InChroot /tools/bin/SymlinkProgram -c overwrite LibXML2 $libxml2Version
 fi
 
+# Update CAcerts version
+
+cacertsVersion=$(ls "$BUILDDIR/Programs/CAcerts/" | grep -v "Settings\|Current")
+if [ "$cacertsVersion" = "cacerts-certdata.txt" ]
+then
+    sudo mv "$BUILDDIR/Programs/CAcerts/$cacertsVersion" "$BUILDDIR/Programs/CAcerts/20120211"
+    InChroot /tools/bin/SymlinkProgram -c overwrite CAcerts 20120211
+fi
+
 # Install extra locales. Please refer to 'localedef --list-archive' on a regular desktop machine
 # for a list of common locales.
 
