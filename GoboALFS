@@ -379,13 +379,11 @@ function CompileExtras() {
 }
  
 # At this point we can build all the extra packages that we want to have in the ISO
-NETWORK_MANAGER_PKGS="ISO-Codes LibNotify LibSecret LibCanberra NSS P11-Kit Gcr Gnome-Keyring Polkit-GNOME PPP Iptables NetworkManager Network-Manager-Applet Notification-Daemon"
+#NETWORK_MANAGER_PKGS="ISO-Codes LibNotify LibSecret LibCanberra NSS P11-Kit Gcr Gnome-Keyring Polkit-GNOME PPP Iptables NetworkManager Network-Manager-Applet Notification-Daemon"
 CompileExtras "Xorg" Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
-CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools $NETWORK_MANAGER_PKGS
-CompileExtras "Qt" Qt PyQt
-CompileExtras "KDE" ConsoleKit KDE
 CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM CairoMM ATKMM GTKMM GParted
+CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NetworkManager
 
 # Create packages using plain tar. Please notice the revision number (r0), for there are
 # no GoboLinux recipes to produce them yet.
