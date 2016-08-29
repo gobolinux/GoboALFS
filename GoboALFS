@@ -391,7 +391,7 @@ function CompileExtras() {
 #NETWORK_MANAGER_PKGS="ISO-Codes LibNotify LibSecret LibCanberra NSS P11-Kit Gcr Gnome-Keyring Polkit-GNOME PPP Iptables NetworkManager Network-Manager-Applet Notification-Daemon"
 CompileExtras "Xorg" Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
-CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM CairoMM ATKMM GTKMM GParted
+CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
 CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NetworkManager NCSA-Mosaic # :-)
 
 # Create packages using plain tar. Please notice the revision number (r0), for there are
@@ -426,6 +426,7 @@ then
             fi
         done
         if [ ! -h "$appName/Current" ]
+exit 0
         then
             # Create Current symlink
             sudo ln -sf $(ls $appName/ | grep -v "Current\|Settings" | sort -n | tail -n1) "$appName/Current"
