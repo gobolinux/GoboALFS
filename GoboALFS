@@ -426,7 +426,6 @@ then
             fi
         done
         if [ ! -h "$appName/Current" ]
-exit 0
         then
             # Create Current symlink
             sudo ln -sf $(ls $appName/ | grep -v "Current\|Settings" | sort -n | tail -n1) "$appName/Current"
