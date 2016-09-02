@@ -388,7 +388,6 @@ function CompileExtras() {
 }
  
 # At this point we can build all the extra packages that we want to have in the ISO
-#NETWORK_MANAGER_PKGS="ISO-Codes LibNotify LibSecret LibCanberra NSS P11-Kit Gcr Gnome-Keyring Polkit-GNOME PPP Iptables NetworkManager Network-Manager-Applet Notification-Daemon"
 CompileExtras "Xorg" Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
 CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
@@ -397,10 +396,27 @@ CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptable
 # Create packages using plain tar. Please notice the revision number (r0), for there are
 # no GoboLinux recipes to produce them yet.
 # We also update the package list based on what's been compiled so far.
+# GoboLinux' own DevelScripts package is used to ensure that packages built
+# through JHALFS have metadata under Resources.
+
+if [ ! -d "$BUILDDIR/Programs/DevelScripts" ]
+then
+    InChroot Compile DevelScripts git || exit 1
+    SanityCheckProgram DevelScripts || exit 1
+    CreatePackageList "GoboLinux-Devel"
+    # Checkout the whole git recipe tree. It doesn't matter which recipe we
+    # ask to checkout at this point.
+    InChroot CheckoutRecipe --batch "ZLib"
+else
+    # Make sure we have an up-to-date git recipe tree
+    pushd "$BUILDDIR/Data/Compile/Git/Recipes" > /dev/null
+    sudo git pull
+    popd
+fi
 
 pushd "$BUILDDIR/Programs" > /dev/null
 for appName in *
-do 
+do
     grep -q "^${appName}$" "$WORKDIR/BuildLiveCD/Data/Packages-List-GoboLinuxTools-"* && continue
     CreateGoboPackage "$appName"
 done
@@ -412,6 +428,11 @@ then
     pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
     for appName in AbsTK BootScripts Compile ConfigTools EnhancedSkel Installer LiveCD Manager Scripts
     do
+        if [ ! -d "$appName" ]
+        then
+            echo "Error: package $appName is not installed"
+            exit 1
+        fi
         for appVersion in $(ls $appName/ | grep -v "Current\|Settings" | sort -n)
         do
             echo "$appVersion" | grep -q "GIT" || continue

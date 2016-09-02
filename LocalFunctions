@@ -49,15 +49,22 @@ function MoveFile() {
 
 function PopulateResources() {
     local appName="$1"
-    local output="$2"
-    local version=$(svn list "http://svn.gobolinux.org/recipes/trunk/$appName" 2> /dev/null | tail -n1)
-    local repos="http://svn.gobolinux.org/recipes/trunk/$appName/$version"
+    local appVersion="$2"
+    local output="$1/$2"
+
+    local appMajorVersion=$(echo "$appVersion" | cut -d. -f1)
+    local recipedir=$(InChroot GuessLatest "/Data/Compile/Git/Recipes/trunk/${appMajorVersion}"*)
+    local input="${BUILDDIR}${recipedir}"
+    [ -z "$recipedir" ] && return
+
     sudo mkdir -p "$output/Resources"
     sudo rm -rf -- "$output/Resources/SettingsBackup"
     for resource in Tasks PostInstall Description
     do 
-        if [ ! -e "$output/Resources/$resource" ]
-        then sudo svn checkout "$repos/Resources/$resource" "$output/Resources/$resource" 2> /dev/null
+        if [ ! -e "$output/Resources/$resource" ] && [ -e "$input/Resources/$resource" ]
+        then
+            sudo cp "$input/Resources/$resource" "$output/Resources/$resource"
+            [ "$resource" = "PostInstall" ] && sudo chmod +x "$output/Resources/$resource"
         fi
     done
     if [ ! -e "$output/Resources/Dependencies" ]
@@ -69,6 +76,7 @@ function PopulateResources() {
         InChroot uname -m | sudo tee -a "$output/Resources/Architecture" > /dev/null
     fi
     find "$output/Resources" -type d -name ".svn" 2> /dev/null | xargs sudo rm -rf
+    find "$output/Resources" -type d -name ".git" 2> /dev/null | xargs sudo rm -rf
 }
 
 function IsBlacklisted() {
@@ -137,7 +145,7 @@ function CreateGoboPackage() {
         if [ ! -e "$packageName" -o $hasModifications -gt 0 ]
         then
             echo "Creating package for $appName $appVersion"
-            PopulateResources "$appName" "$appName/$appVersion"
+            PopulateResources "$appName" "$appVersion"
             sudo find "$appName/$appVersion" -type d -empty | grep -v "Settings/\|Unmanaged/" | while read line
             do 
                 sudo rmdir -p $line >& /dev/null
@@ -187,6 +195,7 @@ function InChroot() {
         sudo mount -o bind /proc "$BUILDDIR/proc"
         sudo mount -o bind /dev "$BUILDDIR/dev"
         export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+        export GIT_SSL_NO_VERIFY=1
         #export NO_UNIONFS=yes
         export SUDO_OK=1
         export goboTemp=/tmp
