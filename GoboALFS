@@ -420,8 +420,8 @@ then
 else
     # Make sure we have an up-to-date git recipe tree
     pushd "$BUILDDIR/Data/Compile/Git/Recipes" > /dev/null
-    sudo git pull
-    popd
+    sudo -E git pull
+    popd > /dev/null
 fi
 
 pushd "$BUILDDIR/Programs" > /dev/null
