@@ -17,6 +17,11 @@ then
    batch=yes
 else
    arg="$1"
+   if [ ! -z "$arg" -a ! -d "$arg" ]
+   then
+       # reset arg so that usage help is shown
+       arg=""
+   fi
 fi
 
 if [ "$arg" = "" ]
