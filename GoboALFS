@@ -35,20 +35,25 @@ then
 fi
 
 WORKDIR=$(readlink -f "$arg")
-SVNDIR=$(readlink -f $(dirname "$0"))
+GOBOALFS_DIR=$(readlink -f $(dirname "$0"))
 PATCHES=(
-    $SVNDIR/01-gobolinux-jhalfs.patch
-    $SVNDIR/02-gobolinux-book.patch
+    $GOBOALFS_DIR/01-gobolinux-jhalfs.patch
+    $GOBOALFS_DIR/02-gobolinux-book.patch
 )
 export SRC_ARCHIVE="$WORKDIR/src_archive"
 export WORKDIR
-GOBO_JHALFS_DIR="$SVNDIR/jhalfs"
-ALFS_CONFIGURATION="$SVNDIR/jhalfs/configuration"
+GOBO_JHALFS_DIR="$GOBOALFS_DIR/jhalfs"
+ALFS_CONFIGURATION="$GOBOALFS_DIR/jhalfs/configuration"
 PACKAGEDIR=$WORKDIR/Packages
 BUILDDIR=$WORKDIR/RootFS
 
+# Do not let our calls to git fail upon certificate validation issues
+export GIT_SSL_NO_VERIFY=1
+
 # LocalFunctions must be imported after all global definitions have been set
-source $SVNDIR/LocalFunctions
+source $GOBOALFS_DIR/LocalFunctions
+
+
 
 ###################################################################################################
 ### Sanity checks
