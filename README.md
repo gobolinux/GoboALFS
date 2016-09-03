@@ -18,6 +18,7 @@ Your host system must have the following development packages:
 * texinfo
 * git
 * autoconf
+* unionfs-fuse
 
 Also, the `lfs` user and group must exist. Please make sure that
 the `lfs` user has sudo privileges.
