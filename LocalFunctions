@@ -165,7 +165,10 @@ function CreateISO() {
         export livecdDataDir="$WORKDIR/BuildLiveCD/Data"
         export livecdUseSystemIndex="true"
         export PATH="$PATH:$WORKDIR/BuildLiveCD/bin"
-        sudo "$WORKDIR/BuildLiveCD/bin/CompressAndBuildISO" $startStage $endStage
+        if [ -e "$HOME/Programs/Rootless/Current/bin/StartRootless" ]
+        then source "$HOME/Programs/Rootless/Current/bin/StartRootless"
+        fi
+        sudo -E SUDO_USER="" PATH="$PATH" "$WORKDIR/BuildLiveCD/bin/CompressAndBuildISO" $startStage $endStage
     )
     popd > /dev/null
 }
