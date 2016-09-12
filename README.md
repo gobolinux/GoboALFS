@@ -20,6 +20,7 @@ Your host system must have the following development packages:
 * autoconf
 * unionfs-fuse
 * squashfs-tools version 4.0 or above.
+* genisoimage, cdrtools, or xorriso (for mkisofs)
 
 Also, the `lfs` user and group must exist. Please make sure that
 the `lfs` user has sudo privileges.
