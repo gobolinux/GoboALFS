@@ -436,7 +436,7 @@ if [ -d "$WORKDIR/ISO/Output/ROLayer/Programs" ]
 then
     # Remove duplicated copies of GoboLinux specific packages inside ROLayer
     pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
-    for appName in AbsTK BootScripts Compile ConfigTools EnhancedSkel Installer LiveCD Manager Scripts
+    for appName in AbsTK BootScripts Compile ConfigTools EnhancedSkel Installer LiveCD Scripts
     do
         if [ ! -d "$appName" ]
         then
