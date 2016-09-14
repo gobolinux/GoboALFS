@@ -12,7 +12,7 @@ umount_sys=
 umount_proc=
 umount_dev=
 mountpoint -q "$BUILDDIR/sys"  || { $SUDO mount -o bind /sys "$BUILDDIR/sys"; umount_sys=yes; }
-mountpoint -q "$BUILDDIR/proc" || { $SUDO mount -o bind /proc "$BUILDDIR/proc" umount_proc=yes; }
+mountpoint -q "$BUILDDIR/proc" || { $SUDO mount -o bind /proc "$BUILDDIR/proc"; umount_proc=yes; }
 mountpoint -q "$BUILDDIR/dev"  || { $SUDO mount -o bind /dev "$BUILDDIR/dev"; umount_dev=yes; }
 
 export PATH=/bin:/sbin:$PATH
