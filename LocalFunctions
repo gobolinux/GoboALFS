@@ -140,7 +140,8 @@ function CreateGoboPackage() {
     local appVersions=( $(ls "$appName/" 2> /dev/null | grep -v "Settings\|Current" | sort -n) )
     for appVersion in ${appVersions[@]}
     do
-        local packageName="$PACKAGEDIR/$appName--$appVersion-r0--$(uname -m).tar.bz2"
+        local revision=$(cat "$appName/$appVersion/Resources/Revision" 2> /dev/null || echo "r0")
+        local packageName="$PACKAGEDIR/${appName}--${appVersion}-${revision}--$(uname -m).tar.bz2"
         local hasModifications=$(find "$appName/$appVersion" -newer "$packageName" 2> /dev/null | wc -l)
         if [ ! -e "$packageName" -o $hasModifications -gt 0 ]
         then
