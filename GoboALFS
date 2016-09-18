@@ -54,7 +54,6 @@ export GIT_SSL_NO_VERIFY=1
 source $GOBOALFS_DIR/LocalFunctions
 
 
-
 ###################################################################################################
 ### Sanity checks
 ###################################################################################################
@@ -345,7 +344,7 @@ fi
 for appName in \
     Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs LVM2 Parted SYSLINUX \
-    Atool Htop Mdadm LibNL PowerTOP
+    Atool Htop Mdadm LibNL PowerTOP Lode-Fonts
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
@@ -402,6 +401,7 @@ CompileExtras "Xorg" Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
 CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
 CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NetworkManager NCSA-Mosaic # :-)
+CompileExtras "Bindings" PyQt
 
 # Create packages using plain tar. Please notice the revision number (r0), for there are
 # no GoboLinux recipes to produce them yet.
@@ -469,7 +469,7 @@ fi
 CreateISO rolayer rolayer
 
 # Fix permissions and file ownership
-if [ -d "$WORKDIR/ISO/Output/ROLayer/Programs/DBus" ]
+if [ -e "$WORKDIR/ISO/Output/ROLayer/Programs/DBus/Current/lib/dbus/dbus-daemon-launch-helper" ]
 then
     messagebus_gid=$(grep messagebus:x: "$WORKDIR/ISO/Output/ROLayer/System/Settings/group" | cut -d: -f3)
     sudo chgrp $messagebus_gid "$WORKDIR/ISO/Output/ROLayer/Programs/DBus/Current/lib/dbus/dbus-daemon-launch-helper" 
