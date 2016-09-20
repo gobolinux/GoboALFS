@@ -400,8 +400,9 @@ function CompileExtras() {
 CompileExtras "Xorg" Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
 CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
-CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NetworkManager NCSA-Mosaic # :-)
+CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NetworkManager NCSA-Mosaic GoboNet
 CompileExtras "Bindings" PyQt
+CompileExtras "Desktop" RXVT-Unicode Compton Lua GObject-Introspection LuaRocks LuaRocks:lgi LuaRocks:luafilesystem LuaRocks:lanes Awesome
 
 # Create packages using plain tar. Please notice the revision number (r0), for there are
 # no GoboLinux recipes to produce them yet.
