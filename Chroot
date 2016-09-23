@@ -5,7 +5,7 @@ BUILDDIR=$WORKDIR/RootFS
 
 if [ $UID = 0 ]
 then SUDO=
-else SUDO=sudo
+else SUDO="sudo -E"
 fi
 
 umount_sys=
@@ -17,7 +17,7 @@ mountpoint -q "$BUILDDIR/dev"  || { $SUDO mount -o bind /dev "$BUILDDIR/dev"; um
 
 export PATH=/bin:/sbin:$PATH
 export SUDO_OK=1
-export SUDO_PS1="[\u@gobolinux-chroot \W]\$"
+export SUDO_PS1="[\u@gobolinux-chroot \W]\$ "
 unset LC_ALL
 unset LANG
 unset LANGUAGE
