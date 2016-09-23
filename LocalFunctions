@@ -1,5 +1,15 @@
 #!/bin/bash (source)
 
+function ProxySudo() {
+    sudo env http_proxy="$http_proxy" \
+             https_proxy="$https_proxy" \
+             HTTP_PROXY="$HTTP_PROXY" \
+             HTTPS_PROXY="$HTTPS_PROXY" \
+             SUDO_USER="" \
+             PATH="$PATH" \
+             "$@"
+}
+
 function BatchRun() {
     local keystrokes="$1"
     shift
@@ -169,7 +179,7 @@ function CreateISO() {
         if [ -e "$HOME/Programs/Rootless/Current/bin/StartRootless" ]
         then source "$HOME/Programs/Rootless/Current/bin/StartRootless"
         fi
-        sudo -E SUDO_USER="" PATH="$PATH" "$WORKDIR/BuildLiveCD/bin/CompressAndBuildISO" $startStage $endStage
+        ProxySudo "$WORKDIR/BuildLiveCD/bin/CompressAndBuildISO" $startStage $endStage
     )
     popd > /dev/null
 }
@@ -213,7 +223,7 @@ function InChroot() {
 
         sudo rm -f "$BUILDDIR/etc/mtab"
         sudo touch "$BUILDDIR/etc/mtab"
-        sudo -E chroot "$BUILDDIR" $@
+        ProxySudo chroot "$BUILDDIR" $@
         ret=$?
 
         sync
