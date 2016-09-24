@@ -356,7 +356,7 @@ fi
 for appName in \
     Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs LVM2 Parted SYSLINUX \
-    Atool Htop Mdadm LibNL PowerTOP Lode-Fonts
+    Atool Htop Mdadm LibNL PowerTOP
 do
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
@@ -417,7 +417,7 @@ CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
 CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NetworkManager NCSA-Mosaic GoboNet
 CompileExtras "Bindings" PyQt
 #CompileExtras "Desktop" RXVT-Unicode Compton Lua GObject-Introspection LuaRocks LuaRocks:lgi LuaRocks:luafilesystem LuaRocks:lanes Awesome
-CompileExtras "Desktop" RXVT-Unicode "Compton git" Lua GObject-Introspection LuaRocks "Awesome git"
+CompileExtras "Desktop" RXVT-Unicode "Compton git" Lua GObject-Introspection LuaRocks "Awesome git" Lode-Fonts
 
 # Create packages using plain tar. Please notice the revision number (r0), for there are
 # no GoboLinux recipes to produce them yet.
