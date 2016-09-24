@@ -411,7 +411,7 @@ function CompileExtras() {
 }
  
 # At this point we can build all the extra packages that we want to have in the ISO
-CompileExtras "Xorg" JPEG-Turbo Xorg XTerm
+CompileExtras "Xorg" LibJPEG-Turbo Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
 CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
 CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NetworkManager NCSA-Mosaic GoboNet
