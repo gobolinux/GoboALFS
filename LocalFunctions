@@ -205,33 +205,36 @@ function UpdateProgramsDu() {
 }
 
 function InChroot() {
-    (
-        sudo mount -o bind /proc "$BUILDDIR/proc"
-        sudo mount -o bind /dev "$BUILDDIR/dev"
-        export PATH=/bin:/sbin:/usr/bin:/usr/sbin
-        export GIT_SSL_NO_VERIFY=1
-        #export NO_UNIONFS=yes
-        export SUDO_OK=1
-        export goboTemp=/tmp
+    sudo mount -o bind /proc "$BUILDDIR/proc"
+    sudo mount -o bind /dev "$BUILDDIR/dev"
+    cat << EOF > "$BUILDDIR/tmp/in_chroot.sh"
+#!/bin/bash
+#export NO_UNIONFS=yes
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+export GIT_SSL_NO_VERIFY=1
+export SUDO_OK=1
+export goboTemp=/tmp
 
-        if [ -e "$BUILDDIR/System/Environment/Cache" ]
-        then
-            # Loading environment variables is vital so that XML catalogs can be found
-            export PATH="$PATH:$BUILDDIR/Programs/Scripts/Current/bin"
-            source "$BUILDDIR/System/Environment/Cache"
-        fi
+if [ -e "/System/Environment/Cache" ]
+then
+    # Loading environment variables is vital so that XML catalogs can be found
+    export PATH="$PATH:/Programs/Scripts/Current/bin"
+    source "/System/Environment/Cache"
+fi
 
-        sudo rm -f "$BUILDDIR/etc/mtab"
-        sudo touch "$BUILDDIR/etc/mtab"
-        ProxySudo chroot "$BUILDDIR" $@
-        ret=$?
-
-        sync
-        sleep 1
-        sudo umount "$BUILDDIR/dev"
-        sudo umount "$BUILDDIR/proc"
-        exit $ret
-    )
+rm -f "/etc/mtab"
+touch "/etc/mtab"
+$@
+ret=$?
+sync; sleep 1; exit \$ret
+EOF
+    chmod +x "$BUILDDIR/tmp/in_chroot.sh"
+    ProxySudo /usr/sbin/chroot "$BUILDDIR" /tmp/in_chroot.sh
+    ret=$?
+    rm -f "$BUILDDIR/tmp/in_chroot.sh"
+    sudo umount "$BUILDDIR/dev"
+    sudo umount "$BUILDDIR/proc"
+    return $ret
 }
 
 function InstallGoboPackage() {
