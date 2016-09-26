@@ -398,7 +398,7 @@ fi
 function CompileExtras() {
     local listname="$1"
     shift
-    for entry in $@; do
+    for entry in "$@"; do
         appName="$(echo "$entry" | awk {'print $1'})"
         appVersion="$(echo "$entry" | awk {'print $2'})"
         if [ ! -d "$BUILDDIR/Programs/$appName" ]
@@ -414,8 +414,8 @@ function CompileExtras() {
 CompileExtras "Xorg" LibJPEG-Turbo Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
 CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
-CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NetworkManager NCSA-Mosaic GoboNet
-CompileExtras "Bindings" PyQt
+CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NCSA-Mosaic GoboNet
+#CompileExtras "Bindings" PyQt
 #CompileExtras "Desktop" RXVT-Unicode Compton Lua GObject-Introspection LuaRocks LuaRocks:lgi LuaRocks:luafilesystem LuaRocks:lanes Awesome
 CompileExtras "Desktop" RXVT-Unicode "Compton git" Lua GObject-Introspection LuaRocks "Awesome git" Lode-Fonts
 
