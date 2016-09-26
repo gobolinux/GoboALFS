@@ -79,7 +79,7 @@ function PopulateResources() {
     done
     if [ ! -e "$output/Resources/Dependencies" ]
     then
-        InChroot Dependencies "$appName" | sudo tee -a "$output/Resources/Dependencies" > /dev/null
+        InChroot Dependencies "$appName" 2> /dev/null | sudo tee -a "$output/Resources/Dependencies" > /dev/null
     fi
     if [ ! -e "$output/Resources/Architecture" ]
     then
@@ -153,7 +153,10 @@ function CreateGoboPackage() {
         local revision=$(cat "$appName/$appVersion/Resources/Revision" 2> /dev/null || echo "r0")
         local packageName="$PACKAGEDIR/${appName}--${appVersion}-${revision}--$(uname -m).tar.bz2"
         local hasModifications=$(find "$appName/$appVersion" -newer "$packageName" 2> /dev/null | wc -l)
-        if [ ! -e "$packageName" -o $hasModifications -gt 0 ]
+        local depFile="$appName/$appVersion/Resources/Dependencies"
+
+        [ -e "$depFile" ] && [ $(stat -c "%s" "$depFile") -lt 2 ] && rm -f "$depfile"
+        if [ ! -e "$packageName" -o $hasModifications -gt 0 -o ! -e "$depFile" ]
         then
             echo "Creating package for $appName $appVersion"
             PopulateResources "$appName" "$appVersion"
