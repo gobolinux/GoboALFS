@@ -459,7 +459,7 @@ then
             echo "Error: package $appName is not installed"
             exit 1
         fi
-        for appVersion in $(ls $appName/ | grep -v "Current\|Settings" | sort -n)
+        for appVersion in $(ls $appName/ | grep -v "Current\|Settings\|Variable" | sort -n)
         do
             echo "$appVersion" | grep -q "GIT" || continue
             appVersionAlone=$(echo "$appVersion" | sed 's,[-A-Z],,g')
@@ -475,7 +475,7 @@ then
         if [ ! -h "$appName/Current" ]
         then
             # Create Current symlink
-            sudo ln -sf $(ls $appName/ | grep -v "Current\|Settings" | sort -n | tail -n1) "$appName/Current"
+            sudo ln -sf $(ls $appName/ | grep -v "Current\|Settings\|Variable" | sort -n | tail -n1) "$appName/Current"
         fi
     done
     popd > /dev/null
@@ -507,7 +507,7 @@ fi
 
 # Create/update Installer's Programs_du file
 pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
-installerVersion=$(ls Installer/ | grep -v "Current\|Settings" | sort -n | tail -n1)
+installerVersion=$(ls Installer/ | grep -v "Current\|Settings\|Variable" | sort -n | tail -n1)
 duFile="$PWD/Installer/$installerVersion/share/Installer/Information/Programs_du.txt"
 if [ ! -e "$duFile" ] || [ $(stat -c '%s' "$duFile") = 0 ]
 then sudo du -s ./* | sudo tee "$duFile" > /dev/null
