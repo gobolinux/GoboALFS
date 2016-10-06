@@ -174,7 +174,7 @@ function CreateGoboPackage() {
     do
         local revision=$(cat "$appName/$appVersion/Resources/Revision" 2> /dev/null || echo "r0")
         local packageName="$PACKAGEDIR/${appName}--${appVersion}-${revision}--$(uname -m).tar.bz2"
-        local hasModifications=$(find "$appName/$appVersion" -newer "$packageName" 2> /dev/null | wc -l)
+        local hasModifications=$(find "$appName/Settings" "$appName/$appVersion" -newer "$packageName" 2> /dev/null | wc -l)
         local depFile="$appName/$appVersion/Resources/Dependencies"
 
         [ -e "$depFile" ] && [ $(stat -c "%s" "$depFile") -lt 2 ] && rm -f "$depfile"
