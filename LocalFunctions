@@ -169,7 +169,7 @@ function CreateGoboPackage() {
     then
         return
     fi
-    local appVersions=( $(ls "$appName/" 2> /dev/null | grep -v "Settings\|Current" | sort -n) )
+    local appVersions=( $(ls "$appName/" 2> /dev/null | grep -v "Settings\|Current\|Variable" | sort -n) )
     for appVersion in ${appVersions[@]}
     do
         local revision=$(cat "$appName/$appVersion/Resources/Revision" 2> /dev/null || echo "r0")
