@@ -24,10 +24,14 @@ function BatchRun() {
     fi
 }
 
+function GetPackageVersion() {
+    ls "$BUILDDIR/Programs/$1/" 2> /dev/null | grep -v "Settings\|Current\|Variable"
+}
+
 function MoveSettingsFile() {
     local settingsFile="$1"
     local programName="$2"
-    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v "Current\|Settings")
+    local programVersion=$(GetPackageVersion $programName)
     if [ -z "$programVersion" ]
     then
         return
@@ -45,7 +49,7 @@ function MoveSettingsFile() {
 function MoveFile() {
     local filename="$1"
     local programName="$2"
-    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v "Current\|Settings")
+    local programVersion=$(GetPackageVersion $programName)
     if [ -z "$programVersion" ]
     then
         return
@@ -55,38 +59,6 @@ function MoveFile() {
         sudo mv -v "$BUILDDIR/usr/$filename" "$BUILDDIR/Programs/$programName/$programVersion/$filename"
         sudo ln -v -s "/Programs/$programName/$programVersion/$filename" "$BUILDDIR/usr/$filename"
     fi
-}
-
-function PopulateResources() {
-    local appName="$1"
-    local appVersion="$2"
-    local output="$1/$2"
-
-    local appMajorVersion=$(echo "$appVersion" | cut -d. -f1)
-    local recipedir=$(InChroot GuessLatest "/Data/Compile/Git/Recipes/trunk/${appMajorVersion}"*)
-    local input="${BUILDDIR}${recipedir}"
-    [ -z "$recipedir" ] && return
-
-    sudo mkdir -p "$output/Resources"
-    sudo rm -rf -- "$output/Resources/SettingsBackup"
-    for resource in Tasks PostInstall Description
-    do 
-        if [ ! -e "$output/Resources/$resource" ] && [ -e "$input/Resources/$resource" ]
-        then
-            sudo cp "$input/Resources/$resource" "$output/Resources/$resource"
-            [ "$resource" = "PostInstall" ] && sudo chmod +x "$output/Resources/$resource"
-        fi
-    done
-    if [ ! -e "$output/Resources/Dependencies" ]
-    then
-        InChroot Dependencies "$appName" 2> /dev/null | sudo tee -a "$output/Resources/Dependencies" > /dev/null
-    fi
-    if [ ! -e "$output/Resources/Architecture" ]
-    then
-        InChroot uname -m | sudo tee -a "$output/Resources/Architecture" > /dev/null
-    fi
-    find "$output/Resources" -type d -name ".svn" 2> /dev/null | xargs sudo rm -rf
-    find "$output/Resources" -type d -name ".git" 2> /dev/null | xargs sudo rm -rf
 }
 
 function IsBlacklisted() {
@@ -139,6 +111,56 @@ function CreatePackageList() {
         [ "$skipPackage" = "false" ] && echo "$appName" >> "$packageList"
     done
     popd > /dev/null
+}
+
+function GetRecipeDir() {
+    local appName="$1"
+    local appVersion="$2"
+    local appMajorVersion=$(echo "$appVersion" | cut -d. -f1)
+
+    # Special case Eudev
+    if [ "$appName" = "Eudev" ]
+    then InChroot GuessLatest "/Data/Compile/Git/Recipes/trunk/Udev/"*
+    else InChroot GuessLatest "/Data/Compile/Git/Recipes/trunk/${appMajorVersion}"*
+    fi
+}
+
+function PopulateResources() {
+    local appName="$1"
+    local appVersion="$2"
+    local output="$1/$2"
+
+    local recipedir=$(GetRecipeDir "$appName" "$appVersion")
+    local input="${BUILDDIR}${recipedir}"
+    [ -z "$recipedir" ] && return
+
+    sudo mkdir -p "$output/Resources"
+    sudo rm -rf -- "$output/Resources/SettingsBackup"
+    if [ -d "$appName/Settings" ]
+    then
+        # Make sure that any tweaked settings are carried over
+        sudo mkdir -p "$output/Resources/Defaults"
+        sudo cp -r "$appName/Settings" "$output/Resources/Defaults/"
+    fi
+    for resource in Tasks PostInstall Description
+    do
+        if [ ! -e "$output/Resources/$resource" ] && [ -e "$input/Resources/$resource" ]
+        then
+            sudo cp -a "$input/Resources/$resource" "$output/Resources/$resource"
+            [ "$resource" = "PostInstall" ] && sudo chmod +x "$output/Resources/$resource"
+            [ "$resource" = "Tasks" ] && sudo chmod +x "$output/Resources/Tasks/"*
+        fi
+    done
+    if [ ! -e "$output/Resources/Dependencies" ]
+    then
+        InChroot Dependencies "$appName" 2> /dev/null | sudo tee -a "$output/Resources/Dependencies" > /dev/null
+    fi
+    if [ ! -e "$output/Resources/Architecture" ]
+    then
+        InChroot uname -m | sudo tee -a "$output/Resources/Architecture" > /dev/null
+    fi
+    find "$output/Resources" -type d -name ".svn" 2> /dev/null | xargs sudo rm -rf
+    find "$output/Resources" -type d -name ".git" 2> /dev/null | xargs sudo rm -rf
 }
 
 function CreateGoboPackage() {
@@ -255,7 +277,7 @@ function InstallGoboPackage() {
 
 function SanityCheckProgram() {
     local programName="$1"
-    local programVersion=$(ls $BUILDDIR/Programs/$programName 2> /dev/null | grep -v "Current\|Settings")
+    local programVersion=$(GetPackageVersion $programName)
     local retval=0
     pushd "$BUILDDIR/Programs" > /dev/null
     if [ -d "${programName}/${programVersion}/etc" ]
