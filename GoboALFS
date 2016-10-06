@@ -351,12 +351,22 @@ then
     popd > /dev/null
 fi
 
-# Compile extra packages needed to run Compile and to boot the ISO nicely
+# Compile extra packages needed to run Compile and to boot the ISO nicely.
 for appName in \
     Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs LVM2 Parted SYSLINUX \
-    Atool Htop Mdadm LibNL PowerTOP
+    Atool Htop Mdadm LibNL PowerTOP Unzip Mtail GPM GRUB GRUB-EFI EFIBootMgr DosFSTools
 do
+    if [ "$appName" = "GRUB" ] && [ ! -d "$BUILDDIR/Programs/GRUB/2.02_beta3" ]
+    then
+        # Remove GRUB installation from JHALFS
+        sudo rm -rf -- "$BUILDDIR/Programs/GRUB"
+    fi
+    if [ "$appName" = "Unzip" ] && [ ! -e "$BUILDDIR/Programs/Unzip/Current/bin/unzip" ]
+    then
+        # Remove broken installation from JHALFS
+        sudo rm -rf -- "$BUILDDIR/Programs/Unzip"
+    fi
     if [ ! -d "$BUILDDIR/Programs/$appName" ]
     then
         InChroot Compile --batch --no-sign "$appName" || exit 1
@@ -414,9 +424,9 @@ CompileExtras "Xorg" LibJPEG-Turbo Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
 CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
 CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NCSA-Mosaic GoboNet
-#CompileExtras "Bindings" PyQt
-#CompileExtras "Desktop" RXVT-Unicode Compton Lua GObject-Introspection LuaRocks LuaRocks:lgi LuaRocks:luafilesystem LuaRocks:lanes Awesome
-CompileExtras "Desktop" RXVT-Unicode "Compton git" Lua GObject-Introspection LuaRocks "Awesome git" Lode-Fonts
+CompileExtras "Bindings" PyQt
+CompileExtras "Desktop" RXVT-Unicode "Compton git" Lua GObject-Introspection LuaRocks "Awesome git" Lode-Fonts DejaVu-Fonts-TTF
+CompileExtras "Multimedia" ALSA-Utils FFmpeg
 
 # Create packages using plain tar. Please notice the revision number (r0), for there are
 # no GoboLinux recipes to produce them yet.
