@@ -125,6 +125,15 @@ function GetRecipeDir() {
     fi
 }
 
+function SetExecutableBit() {
+    local filenames="$@"
+    for fname in "${filenames[@]}"
+    do
+        [ -e "$fname" ] || continue
+        [ -x "$fname" ] || sudo chmod +x "$fname"
+    done
+}
+
 function PopulateResources() {
     local appName="$1"
     local appVersion="$2"
@@ -147,10 +156,10 @@ function PopulateResources() {
         if [ ! -e "$output/Resources/$resource" ] && [ -e "$input/Resources/$resource" ]
         then
             sudo cp -a "$input/Resources/$resource" "$output/Resources/$resource"
-            [ "$resource" = "PostInstall" ] && sudo chmod +x "$output/Resources/$resource"
-            [ "$resource" = "Tasks" ] && sudo chmod +x "$output/Resources/Tasks/"*
         fi
     done
+    SetExecutableBit "$output/Resources/PostInstall"
+    SetExecutableBit "$output/Resources/Tasks/"*
     if [ ! -e "$output/Resources/Dependencies" ]
     then
         InChroot Dependencies "$appName" 2> /dev/null | sudo tee -a "$output/Resources/Dependencies" > /dev/null
