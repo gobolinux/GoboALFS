@@ -356,7 +356,7 @@ for appName in \
     Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs LVM2 Parted SYSLINUX \
     Atool Htop Mdadm LibNL PowerTOP Unzip Mtail GPM GRUB GRUB-EFI EFIBootMgr DosFSTools \
-    Linux-Firmware
+    Linux-Firmware Pinfo
 do
     if [ "$appName" = "GRUB" ] && [ ! -d "$BUILDDIR/Programs/GRUB/2.02_beta3" ]
     then
@@ -424,7 +424,7 @@ function CompileExtras() {
 CompileExtras "Xorg" LibJPEG-Turbo Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
 CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
-CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NCSA-Mosaic GoboNet
+CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NCSA-Mosaic Pinentry GoboNet
 CompileExtras "Bindings" PyQt
 CompileExtras "Desktop" RXVT-Unicode "Compton git" Lua GObject-Introspection LuaRocks "Awesome git" Lode-Fonts DejaVu-Fonts-TTF
 CompileExtras "Multimedia" ALSA-Utils FFmpeg
