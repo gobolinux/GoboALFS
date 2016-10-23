@@ -89,7 +89,7 @@ DEP_LIBXSLT=y
 DEP_TIDY=y
 DEP_DBXML=y
 # DEP_LYNX is not set
-DEP_SUDO=y
+# DEP_SUDO is not set
 DEP_WGET=y
 # DEP_GPM is not set
 DEP_SVN=y
