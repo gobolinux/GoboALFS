@@ -377,6 +377,10 @@ do
         shadowVersion=$(GetPackageVersion Shadow)
         InChroot Compile --batch --no-sign Shadow $shadowVersion || exit 1
         SanityCheckProgram Shadow || exit 1
+        # Remove Settings/skel (we use the one from EnhancedSkel)
+        sudo rm -rf -- "$BUILDDIR/Programs/Shadow/$shadowVersion/Resources/Defaults/Settings/skel"
+        sudo rm -rf -- "$BUILDDIR/Programs/Shadow/Settings/skel"
+        sudo rm -f "$BUILDDIR/System/Settings/skel"
     fi
 done
 CreatePackageList "Base"
