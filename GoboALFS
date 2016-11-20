@@ -353,7 +353,7 @@ for appName in \
     Sudo Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs LVM2 Parted SYSLINUX \
     Atool Htop Mdadm LibNL PowerTOP Unzip Mtail GPM GRUB GRUB-EFI EFIBootMgr DosFSTools \
-    Linux-Firmware Pinfo
+    Linux-Firmware Pinfo OS-Prober ELFUtils
 do
     if [ "$appName" = "GRUB" ] && [ ! -d "$BUILDDIR/Programs/GRUB/2.02_beta3" ]
     then
@@ -425,9 +425,9 @@ function CompileExtras() {
 CompileExtras "Xorg" LibJPEG-Turbo Xorg XTerm
 CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
 CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
-CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NCSA-Mosaic Pinentry GoboNet
+CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables NCSA-Mosaic Pinentry RFKill GoboNet
 CompileExtras "Bindings" PyQt
-CompileExtras "Desktop" RXVT-Unicode "Compton git" Lua GObject-Introspection LuaRocks "Awesome git" Lode-Fonts DejaVu-Fonts-TTF
+CompileExtras "Desktop" RXVT-Unicode "Compton git" Lua GObject-Introspection LuaRocks "Awesome git" Lode-Fonts DejaVu-Fonts-TTF "Dit git"
 CompileExtras "Multimedia" ALSA-Utils FFmpeg
 
 # Create packages using plain tar. Please notice the revision number (r0), for there are
