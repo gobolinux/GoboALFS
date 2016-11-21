@@ -17,6 +17,7 @@ Your host system must have the following development packages:
 * libncurses5-dev
 * texinfo
 * git
+* uuid-dev
 * autoconf
 * unionfs-fuse
 * squashfs-tools version 4.0 or above.
