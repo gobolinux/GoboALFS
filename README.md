@@ -21,8 +21,9 @@ Your host system must have the following development packages:
 * autoconf
 * unionfs-fuse
 * squashfs-tools version 4.0 or above.
-* genisoimage, cdrtools, or xorriso (for mkisofs)
+* genisoimage (for mkisofs)
 * syslinux-utils (for isohybrid)
+* dosfstools (for mkfs.fat)
 
 Also, the `lfs` user and group must exist. Please make sure that
 the `lfs` user has sudo privileges.
