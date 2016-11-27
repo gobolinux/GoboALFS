@@ -454,7 +454,7 @@ fi
 pushd "$BUILDDIR/Programs" > /dev/null
 for appName in *
 do
-    grep -q "^${appName}$" "$WORKDIR/BuildLiveCD/Data/Packages-List-GoboLinuxTools-"* && continue
+    grep -q "^${appName}$" "$WORKDIR/BuildLiveCD/Data/Packages-List-GoboLinuxTools-Git" && continue
     CreateGoboPackage "$appName"
 done
 popd > /dev/null
