@@ -467,8 +467,8 @@ then
     do
         if [ ! -d "$appName" ]
         then
-            echo "Error: package $appName is not installed"
-            exit 1
+            echo "Warning: package $appName is not installed (yet?)"
+            continue
         fi
         for appVersion in $(ls $appName/ | grep -v "Current\|Settings\|Variable" | sort -n)
         do
