@@ -53,7 +53,6 @@ export GIT_SSL_NO_VERIFY=1
 # LocalFunctions must be imported after all global definitions have been set
 source $GOBOALFS_DIR/LocalFunctions
 
-
 ###################################################################################################
 ### Sanity checks
 ###################################################################################################
@@ -353,7 +352,7 @@ for appName in \
     Sudo Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs LVM2 Parted SYSLINUX \
     Atool Htop Mdadm LibNL PowerTOP Unzip Mtail GPM GRUB GRUB-EFI EFIBootMgr DosFSTools \
-    lINUX-fIRMWARE pINFo OS-Prober ELFUtils SetupTools PIP CryptSetup
+    Linux-Firmware Pinfo OS-Prober ELFUtils SetupTools PIP CryptSetup
 do
     if [ "$appName" = "GRUB" ] && [ ! -d "$BUILDDIR/Programs/GRUB/2.02_beta3" ]
     then
@@ -524,6 +523,12 @@ if [ ! -e "$duFile" ] || [ $(stat -c '%s' "$duFile") = 0 ]
 then sudo du -s ./* | sudo tee "$duFile" > /dev/null
 else UpdateProgramsDu "$duFile"
 fi
+popd > /dev/null
+
+# Update programs descriptions
+pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
+descriptionsFile="$PWD/Installer/$installerVersion/share/Installer/Information/ShortDescriptions.txt"
+[ -e "$descriptionsFile" ] && UpdateProgramsDescriptions "$descriptionsFile"
 popd > /dev/null
 
 # Create the ISO

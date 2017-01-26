@@ -238,6 +238,25 @@ function UpdateProgramsDu() {
     done
 }
 
+function UpdateProgramsDescriptions() {
+    local descriptionsFile="$1"
+    if [ $(basename "$PWD") != "Programs" ]
+    then
+        echo "Error: UpdateProgramsDescriptions called with invalid \$PWD (should be /path/to/Programs)"
+        return
+    fi
+    for appName in *
+    do
+        grep -q "^${appName} ::" "$descriptionsFile" && continue
+        local appDesc="$PWD/$appName/Current/Resources/Description"
+        if [ -e "$appDesc" ]
+        then
+            local summary=$(grep "^\[Summary\]" "$appDesc" | cut -d" " -f2-)
+            echo "${appName} :: ${summary}" | sudo tee -a "$descriptionsFile" > /dev/null
+        fi
+    done
+}
+
 function InChroot() {
     sudo mount -o bind /proc "$BUILDDIR/proc"
     sudo mount -o bind /dev "$BUILDDIR/dev"
