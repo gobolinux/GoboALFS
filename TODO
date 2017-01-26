@@ -1,23 +1,38 @@
-Broken recipes/meta recipes: 
-- Xorg-App (installs both Shared and share)
-- Xorg-Driver (installs both Shared and share)
-- Unknown Xorg recipe(s) causing X input to fail: 
-  -> /System/Links/Shared/X11/xorg.conf.d/*.conf: need to replace /System/Kernel/Devices with /dev
-- LibTool:
-  Needs to be patched to get rid of the following fatal message:
-    libtool: install: /bin/install -c .libs/libxcb.lai /Programs/Xorg-Lib/7.7/lib/libxcb.la
-    libtool: install: error: cannot install `libxcb-composite.la' to a directory not ending in /usr/lib
+tasks: openssh (chmod +x)
 
-bash-4.2# cd /Programs/
-bash-4.2# for i in *; do [ -d $i/Current/man ] && echo $i; done
-CMake
-FFmpeg
-Kerberos
-Portmap
-SYSLINUX
-Wireless-Tools
-Zip
+testar e compilar pacote SPICE
 
 dbus config files:
   -> Unknown username 'avahi', 'pulse'
   -> Unknown group 'netdev'
+
+/System/Aliens/CPAN/.cpan/CPAN/MyConfig.pm (Recipe)
+
+Fontconfig/Settings tem arquivos que nao aparecem no Fontconfig/Current/Resources/Defaults/Settings
+
+
+
+partition table: msdos
+/dev/sdb1 0  512M EFI System
+/dev/sdb2 512M 7G Linux filesystem
+
+mkfs.vfat /dev/sdb1
+mkfs.ext4 /dev/sdb2
+mount /dev/sdb1 /Mount/EFI; cd /Mount/EFI
+mount /dev/sdb2 /Mount/Root; cd /Mount/Root
+
+root@TheMachine /sys/class/block/sdb4]blkid /dev/sdb4
+/dev/sdb4: UUID="180B-D722" TYPE="vfat" PARTUUID="3df3821d-de64-4016-bda4-a279ab03c550"
+
+UUID vai no grub-efi.cfg
+
+grub-mkstandalone-efi -d /Programs/GRUB-EFI/Current/lib/grub/x86_64-efi -O x86_64-efi --modules="part_gpt part_msdos iso9660 all_video efi_gop efi_uga video_bochs video_cirrus gfxterm gettext font" --fonts="unicode" --themes="" -o BOOTX64.EFI --compress=gz "boot/grub/grub.cfg=grub-efi.cfg"
+
+
+
+
+strip:
+[root@gobolinux-chroot Programs]$ for i in *; do [ $i = LibFFI ] && continue; find $i/*/lib/ -type f -name "*.so*" 2> /dev/null; done | while read soname; do strip --strip-unneeded "$soname"; done
+
+root@lucasvr-private:/GoboLinux/RootFS/Programs# for i in *; do du -s ./$i; done > /GoboLinux/ISO/LocalGit/tools/Installer/share/Installer/Information/Programs_du.txt
+
