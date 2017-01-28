@@ -148,7 +148,7 @@ function Create_Filesystem_Tree() {
    fi
    create_link Users/$superuser            $root/root
    create_link $variabledir                $root/var
-   create_link $variabledir                $root/run
+   create_link $variabledir/run            $root/run
    create_link $variabledir/tmp            $root/tmp
    create_link System/Kernel/Objects       $root/sys
    create_link System/Kernel/Devices       $root/dev
