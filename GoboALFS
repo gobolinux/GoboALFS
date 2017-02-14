@@ -352,7 +352,7 @@ for appName in \
     Sudo Fuse UnionFS-Fuse CMake Perl Git GoboHide Linux Help2Man Net-Tools \
     Linux-PAM Dialog DHCPCD Acpid Hdparm ZSH ReiserFSProgs LVM2 Parted SYSLINUX \
     Atool Htop Mdadm LibNL PowerTOP Unzip Mtail GPM GRUB GRUB-EFI EFIBootMgr DosFSTools \
-    Linux-Firmware Pinfo OS-Prober ELFUtils SetupTools PIP CryptSetup
+    Linux-Firmware Pinfo OS-Prober ELFUtils SetupTools PIP CryptSetup Json-C Listener
 do
     if [ "$appName" = "GRUB" ] && [ ! -d "$BUILDDIR/Programs/GRUB/2.02_beta3" ]
     then
