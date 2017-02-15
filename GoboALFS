@@ -531,5 +531,12 @@ descriptionsFile="$PWD/Installer/$installerVersion/share/Installer/Information/S
 [ -e "$descriptionsFile" ] && UpdateProgramsDescriptions "$descriptionsFile"
 popd > /dev/null
 
+# Remove left-overs from SandboxInstall and any .git/.gitignore files
+pushd "$WORKDIR/ISO/Output/ROLayer/Programs" > /dev/null
+sudo rm -rf */*/.SandboxInstall_Root 2> /dev/null
+sudo rm -rf */*/.git 2> /dev/null
+sudo rm -f */*/.gitignore 2> /dev/null
+popd > /dev/null
+
 # Create the ISO
 CreateISO squashfs iso
