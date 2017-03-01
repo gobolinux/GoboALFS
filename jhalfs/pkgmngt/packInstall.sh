@@ -76,20 +76,20 @@ rm -fv ./usr/share/info/dir  # recommended since this directory is already there
 local target="/Programs/$appName/$VERSION"
 mkdir -p "$target/Resources/Defaults/Settings"
 
-[ -d "./usr" -a $(ls ./usr/ | wc -l) -gt 0 ] && cp -Ra usr/* "$target/"
+[ -d "./usr" -a $(ls ./usr/ | wc -l) -gt 0 ] && cp -a usr/* "$target/"
 rm -rf usr
 
-[ -d "./etc" -a $(ls ./etc/ | wc -l) -gt 0 ] && cp -Ra etc/* "$target/Resources/Defaults/Settings/"
+[ -d "./etc" -a $(ls ./etc/ | wc -l) -gt 0 ] && cp -a etc/* "$target/Resources/Defaults/Settings/"
 rm -rf etc
 
 if [ -d "./var" -a $(ls ./var/ | wc -l) -gt 0 ]
 then
     mkdir -p "$target/Resources/Unmanaged/Data/Variable"
-    cp -Ra var/* "$target/Resources/Unmanaged/Data/Variable/"
+    cp -a var/* "$target/Resources/Unmanaged/Data/Variable/"
 fi
 rm -rf var
 
-[ $(ls | wc -l | awk {'print $1'}) -gt 0 ] && cp -Ra * "$target/"
+[ $(ls | wc -l | awk {'print $1'}) -gt 0 ] && cp -a * "$target/"
 rm -rf *
 
 if [ -d "$target/lib64" ]
@@ -97,7 +97,7 @@ then
     # Merge lib64 and lib
     if [ -d "$target/lib" ]
     then
-        cp -Ra "$target/lib64/"* "$target/lib/"
+        cp -a "$target/lib64/"* "$target/lib/"
         rm -rf "$target/lib64"
     else
         mv "$target/lib64" "$target/lib"
@@ -107,7 +107,7 @@ fi
 if [ -d "$target/etc" ]
 then
     # Could happen if we have both /etc and /usr/etc (who knows..)
-    cp -R "$target/etc/*" "$target/Resources/Defaults/Settings/"
+    cp -a "$target/etc/*" "$target/Resources/Defaults/Settings/"
     rm -rf "$target/etc"
 fi
 
@@ -116,7 +116,7 @@ then
     if [ ! -d "$target/../Settings" ]
     then
         mkdir "$target/../Settings"
-        cp -R "$target/Resources/Defaults/Settings/"* "$target/../Settings/"
+        cp -a "$target/Resources/Defaults/Settings/"* "$target/../Settings/"
     fi
 fi
 

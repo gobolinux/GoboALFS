@@ -149,7 +149,7 @@ function PopulateResources() {
     then
         # Make sure that any tweaked settings are carried over
         sudo mkdir -p "$output/Resources/Defaults"
-        sudo cp -r "$appName/Settings" "$output/Resources/Defaults/"
+        sudo cp -a "$appName/Settings" "$output/Resources/Defaults/"
     fi
     for resource in Tasks PostInstall Description
     do
@@ -295,10 +295,10 @@ function InstallGoboPackage() {
     local snapshotDir="$(date +%Y%m%d)-GIT"
     local packageDir="$BUILDDIR/Programs/$appName/$snapshotDir"
     sudo mkdir -p "$packageDir"
-    sudo cp -R "$WORKDIR/ISO/LocalGit/tools/$appName/"* "$packageDir/"
+    sudo cp -a "$WORKDIR/ISO/LocalGit/tools/$appName/"* "$packageDir/"
     sudo ln -fs "$snapshotDir" "$BUILDDIR/Programs/$appName/Current"
     sudo rm -rf "$packageDir/.git"
-    sudo cp -R "$packageDir/Resources/Defaults/Settings" "$packageDir/.."
+    sudo cp -a "$packageDir/Resources/Defaults/Settings" "$packageDir/.."
     InChroot make -C "/Programs/$appName/$snapshotDir"
     InChroot /tools/bin/SymlinkProgram -c overwrite $appName
 }

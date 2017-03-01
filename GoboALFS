@@ -134,7 +134,7 @@ then
 
     if [ ! -e BLFS/libs/gobolinux_patch_buildscript ]
     then
-        cp -R "$GOBO_JHALFS_DIR"/* .
+        cp -a "$GOBO_JHALFS_DIR"/* .
     fi
 
     popd > /dev/null
