@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Remove a program from ROLayer and RootFS and cleans up broken links. The tarball at Packages is also deleted.
+# Lucas C. Villa Real <lucasvr@gobolinux.org>
+
+WORKDIR=/GoboLinux
+ARCH=$(uname -m)
+
+function Die() { echo "$@"; exit 1; }
+
+###################
+# Argument parsing
+###################
+
+PKGNAME="$1"
+PKGVERSION="$2"
+[ -z "$PKGNAME" ] && Die "Syntax: $0 <program name> [version]"
+[ -z "$PKGVERSION" ] && PKGVERSION=".*"
+
+################
+# Sanity checks
+################
+
+count=$(ls $WORKDIR/Packages/ | grep -i "^${PKGNAME}--${PKGVERSION}-r.*--${ARCH}.tar.bz2" | wc -l | awk {'print $1'})
+if [ "$count" -gt 1 ] && [ "$PKGVERSION" = ".*" ]
+then Die "More than one version of $PKGNAME is currently installed. Please specify a version."
+elif [ $count -eq 0 ] && [ "$PKGVERSION" = ".*" ]
+then Die "No package named $PKGNAME has been found. Please check that case is correct."
+elif [ $count -eq 0 ]
+then Die "No package named $PKGNAME with version $PKGVERSION has been found. Please check that case is correct."
+fi
+
+[ "$PKGVERSION" = ".*" ] && PKGVERSION="*"
+
+############
+# Operation
+############
+
+echo "Removing binary package..."
+sudo rm -vf $WORKDIR/Packages/${PKGNAME}--${PKGVERSION}-r*--${ARCH}.tar.bz2
+
+echo "Removing files from RootFS..."
+sudo rm -rf $WORKDIR/RootFS/Programs/${PKGNAME}/${PKGVERSION}
+sudo rmdir -q $WORKDIR/RootFS/Programs/${PKGNAME} 2> /dev/null
+sudo chroot $WORKDIR/RootFS find /System/Index /System/Settings | sudo chroot $WORKDIR/RootFS RemoveBroken
+
+echo "Removing files from ROLayer..."
+sudo rm -rf $WORKDIR/ISO/Output/ROLayer/Programs/${PKGNAME}/${PKGVERSION}
+sudo rmdir $WORKDIR/ISO/Output/ROLayer/Programs/${PKGNAME} 2> /dev/null
+sudo chroot $WORKDIR/ISO/Output/ROLayer find /System/Index /System/Settings | sudo chroot $WORKDIR/ISO/Output/ROLayer RemoveBroken
