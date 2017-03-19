@@ -426,7 +426,7 @@ CompileExtras "Printing" CUPS CUPS-Filters Ghostscript Gutenprint Hplip
 CompileExtras "GTKMM" LibSigc++ GLibmm PangoMM Cairomm ATKMM GTKMM GParted
 CompileExtras "Networking" OpenSSH WPA_Supplicant Wireless-Tools NSS PPP Iptables Pinentry RFKill GoboNet
 CompileExtras "Bindings" PyQt
-CompileExtras "Desktop" RXVT-Unicode "Compton git" Lua GObject-Introspection LuaRocks "Awesome git" Lode-Fonts DejaVu-Fonts-TTF Dit "Tabbedex-URxvt git" Tk
+CompileExtras "Desktop" RXVT-Unicode "Compton git" Lua GObject-Introspection LuaRocks "Awesome git" Lode-Fonts DejaVu-Fonts-TTF Dit "Tabbedex-URxvt git" Tk APulse
 CompileExtras "Multimedia" ALSA-Utils FFmpeg
 
 # Create packages using plain tar. Please notice the revision number (r0), for there are
