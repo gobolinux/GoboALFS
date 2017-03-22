@@ -494,6 +494,9 @@ fi
 # Create the ROLayer environment to force GoboLinux tools to be fetched
 CreateISO rolayer rolayer
 
+# Rehash certificates
+sudo chroot "$WORKDIR/ISO/Output/ROLayer" c_rehash
+
 # Fix permissions and file ownership
 if [ -e "$WORKDIR/ISO/Output/ROLayer/Programs/DBus/Current/lib/dbus/dbus-daemon-launch-helper" ]
 then
