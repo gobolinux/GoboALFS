@@ -1,31 +1,123 @@
+Index: BLFS/gen-makefile.sh
+===================================================================
+--- BLFS/gen-makefile.sh	(revision 3949)
++++ BLFS/gen-makefile.sh	(working copy)
+@@ -42,6 +42,7 @@
+ #----------------------------------#
+ (
+ cat << EOF
++	mkdir -p logs
+ 	@source ${TOPDIR}/envars.conf && ${BUILD_SCRIPTS}/\$@ >logs/\$@ 2>&1
+ EOF
+ ) >> $MKFILE.tmp
+Index: BLFS/gen_pkg_book.sh
+===================================================================
+--- BLFS/gen_pkg_book.sh	(revision 3949)
++++ BLFS/gen_pkg_book.sh	(working copy)
+@@ -123,6 +123,11 @@
+ source ${LibDir}/func_dependencies
+ [[ $? > 0 ]] && echo -e "\n\tERROR: func_dependencies did not load..\n" && exit
+ 
++#---------------------
++# GoboLinux fixes
++source ${LibDir}/gobolinux_patch_buildscript
++[[ $? > 0 ]] && echo -e "\n\tERROR: gobolinux_patch_buildscript did not load..\n" && exit
++
+ #------- MAIN --------
+ if [[ ! -f ${PackFile} ]] ; then
+   echo -e "\tNo packages file has been found.\n"
+@@ -185,4 +190,7 @@
+ chmod -R +x scripts
+ echo -e "done\n"
+ 
++# Patch the scripts
++for i in ./scripts/*; do PatchBLFSScript "$i"; done
++
+ #clean_configuration
+Index: common/libs/func_check_version.sh
+===================================================================
+--- common/libs/func_check_version.sh	(revision 3949)
++++ common/libs/func_check_version.sh	(working copy)
+@@ -112,7 +112,7 @@
+     check_version "$MIN_Glibc_VER"     "$(ldd --version  | head -n1 | awk '{print $NF}')"   "GLIBC"
+   fi
+   if [ -n "$MIN_Binutils_VER" ]; then
+-    check_version "$MIN_Binutils_VER"  "$(ld --version  | head -n1 | awk '{print $NF}')"    "BINUTILS"
++    check_version "$MIN_Binutils_VER"  "$(ld --version | sed -n 's,.*Bin[^0-9]*\([0-9]*\.[0-9]*\).*,\1,p')"    "BINUTILS"
+   fi
+   if [ -n "$MIN_Tar_VER" ]; then
+     check_version "$MIN_Tar_VER"       "$(tar --version | head -n1 | cut -d" " -f4)"        "TAR"
+Index: common/libs/func_install_blfs
+===================================================================
+--- common/libs/func_install_blfs	(revision 3949)
++++ common/libs/func_install_blfs	(working copy)
+@@ -157,7 +157,7 @@
+ rm -v $BUILDDIR$BLFS_ROOT/download_script
+ 
+ # Suppresses unneeded parts of the scriptlets
+-if [ "$DEP_LIBXSLT" = y ]; then
++if [ "$DEP_LIBXSLT" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*docbook-xsl &> /dev/null) ]; then
+   # libxslt pulls docbook-xsl in, which populates the catalog with annoying
+   # **EDITME** references. Fortunately, those lines are regognizable because
+   # they occur between lines containing '/etc/xml/catalog' at the end of the
+@@ -175,13 +175,13 @@
+ d}' \
+       $BUILDDIR$BLFS_ROOT/scripts/*docbook-xsl
+ fi
+-if [ "$DEP_SUDO" = y ]; then
++if [ "$DEP_SUDO" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*sudo &> /dev/null) ]; then
+   sed -i '/cat.*pam.d/i mkdir -p /etc/pam.d' $BUILDDIR$BLFS_ROOT/scripts/*sudo
+ fi
+-if [ "$DEP_SVN" = y ]; then
++if [ "$DEP_SVN" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*subversion &> /dev/null) ]; then
+   sed -i -e /javahl/d -e /swig/d $BUILDDIR$BLFS_ROOT/scripts/*subversion
+ fi
+-if [ "$DEP_LYNX" = y ]; then
++if [ "$DEP_LYNX" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*lynx &> /dev/null) ]; then
+   if [ "$DEP_OPENSSL" = y -o "$DEP_WGET" = y ]; then
+     sed -e 's/configure/& --with-ssl/' \
+         -i $BUILDDIR$BLFS_ROOT/scripts/*lynx
+Index: common/libs/func_wrt_Makefile
+===================================================================
+--- common/libs/func_wrt_Makefile	(revision 3949)
++++ common/libs/func_wrt_Makefile	(working copy)
+@@ -110,6 +110,8 @@
+          ;;
+      libdbus) echo $(grep "^dbus" $JHALFSDIR/pkg_tarball_list | head -n1 )
+          ;;
++     gobolinux) echo $(grep "^gobolinux_alfs" $JHALFSDIR/pkg_tarball_list | head -n1 )
++         ;;
+      *)  echo $(grep "^$script_name[_-][[:digit:]]" $JHALFSDIR/pkg_tarball_list | head -n1 )
+          ;;
+    esac
 Index: install-blfs-tools.sh
 ===================================================================
---- install-blfs-tools.sh	(revision 3771)
+--- install-blfs-tools.sh	(revision 3949)
 +++ install-blfs-tools.sh	(working copy)
-@@ -53,7 +53,7 @@
- 
+@@ -77,7 +77,7 @@
  COMMON_DIR="common"
+ # blfs-tool envars
  BLFS_TOOL='y'
 -BUILDDIR=$(cd ~;pwd)
 +BUILDDIR="$WORKDIR/RootFS"
  BLFS_ROOT="${BLFS_ROOT:=/blfs_root}"
  TRACKING_DIR="${TRACKING_DIR:=/var/lib/jhalfs/BLFS}"
- 
-@@ -109,6 +109,9 @@
- mkdir -p $TRACKING_DIR
- [[ $VERBOSITY > 0 ]] && echo "... OK"
+ INITSYS="${INITSYS:=sysv}"
+@@ -165,6 +165,9 @@
+ [[ $BLFS_BOOK = $BUILDDIR$BLFS_ROOT/$BLFS_XML ]] ||
+ cp -a $BLFS_BOOK $BUILDDIR$BLFS_ROOT/$BLFS_XML
  
 +# Replace the default configuration file with the Gobo-ALFS one.
 +cp configuration.blfs ${BUILDDIR}${BLFS_ROOT}/configuration
 +
- [[ $VERBOSITY > 0 ]] && echo -n "Downloading and validating the book (may take some time)"
- make -j1 -C $BUILDDIR$BLFS_ROOT TRACKING_DIR=$TRACKING_DIR \
-     $BUILDDIR$BLFS_ROOT/packages.xml
+ make -j1 -C $BUILDDIR$BLFS_ROOT \
+      TRACKING_DIR=$TRACKING_DIR \
+      REV=$INITSYS            \
 Index: jhalfs
 ===================================================================
---- jhalfs	(revision 3771)
+--- jhalfs	(revision 3949)
 +++ jhalfs	(working copy)
-@@ -416,6 +416,16 @@
+@@ -430,6 +430,16 @@
  
  # Download or updates the book source
    get_book
@@ -42,95 +134,3 @@ Index: jhalfs
    extract_commands
    echo "${SD_BORDER}${nl_}"
  
-Index: common/libs/func_wrt_Makefile
-===================================================================
---- common/libs/func_wrt_Makefile	(revision 3771)
-+++ common/libs/func_wrt_Makefile	(working copy)
-@@ -110,6 +110,8 @@
-          ;;
-      libdbus) echo $(grep "^dbus" $JHALFSDIR/pkg_tarball_list | head -n1 )
-          ;;
-+     gobolinux) echo $(grep "^gobolinux_alfs" $JHALFSDIR/pkg_tarball_list | head -n1 )
-+         ;;
-      *)  echo $(grep "^$script_name[_-][[:digit:]]" $JHALFSDIR/pkg_tarball_list | head -n1 )
-          ;;
-    esac
-Index: common/libs/func_install_blfs
-===================================================================
---- common/libs/func_install_blfs	(revision 3868)
-+++ common/libs/func_install_blfs	(working copy)
-@@ -148,7 +148,7 @@
- rm -v $BUILDDIR$BLFS_ROOT/download_script
- 
- # Suppresses unneeded parts of the scriptlets
--if [ "$DEP_LIBXSLT" = y ]; then
-+if [ "$DEP_LIBXSLT" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*docbook-xsl &> /dev/null) ]; then
-   # libxslt pulls docbook-xsl in, which populates the catalog with annoying
-   # **EDITME** references. Fortunately, those lines are regognizable because
-   # they occur between lines containing '/etc/xml/catalog' at the end of the
-@@ -166,13 +166,13 @@
- d}' \
-       $BUILDDIR$BLFS_ROOT/scripts/*docbook-xsl
- fi
--if [ "$DEP_SUDO" = y ]; then
-+if [ "$DEP_SUDO" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*sudo &> /dev/null) ]; then
-   sed -i '/cat.*pam.d/i mkdir -p /etc/pam.d' $BUILDDIR$BLFS_ROOT/scripts/*sudo
- fi
--if [ "$DEP_SVN" = y ]; then
-+if [ "$DEP_SVN" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*subversion &> /dev/null) ]; then
-   sed -i -e /javahl/d -e /swig/d $BUILDDIR$BLFS_ROOT/scripts/*subversion
- fi
--if [ "$DEP_LYNX" = y ]; then
-+if [ "$DEP_LYNX" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*lynx &> /dev/null) ]; then
-   if [ "$DEP_OPENSSL" = y -o "$DEP_WGET" = y ]; then
-     sed -i -e 's/configure/& --with-ssl/' \
-            -e '/make$/i echo "#define USE_OPENSSL_INCL 1" >> lynx_cfg.h &&' \
-Index: common/libs/func_check_version.sh
-===================================================================
---- common/libs/func_check_version.sh	(revision 3771)
-+++ common/libs/func_check_version.sh	(working copy)
-@@ -112,7 +112,7 @@
-     check_version "$MIN_Glibc_VER"     "$(ldd --version  | head -n1 | awk '{print $NF}')"   "GLIBC"
-   fi
-   if [ -n "$MIN_Binutils_VER" ]; then
--    check_version "$MIN_Binutils_VER"  "$(ld --version  | head -n1 | awk '{print $NF}')"    "BINUTILS"
-+    check_version "$MIN_Binutils_VER"  "$(ld --version | sed -n 's,.*Bin[^0-9]*\([0-9]*\.[0-9]*\).*,\1,p')"    "BINUTILS"
-   fi
-   if [ -n "$MIN_Tar_VER" ]; then
-     check_version "$MIN_Tar_VER"       "$(tar --version | head -n1 | cut -d" " -f4)"        "TAR"
-Index: BLFS/gen_pkg_book.sh
-===================================================================
---- BLFS/gen_pkg_book.sh	(revision 3771)
-+++ BLFS/gen_pkg_book.sh	(working copy)
-@@ -121,6 +121,11 @@
- source ${LibDir}/func_dependencies
- [[ $? > 0 ]] && echo -e "\n\tERROR: func_dependencies did not load..\n" && exit
- 
-+#---------------------
-+# GoboLinux fixes
-+source ${LibDir}/gobolinux_patch_buildscript
-+[[ $? > 0 ]] && echo -e "\n\tERROR: gobolinux_patch_buildscript did not load..\n" && exit
-+
- #------- MAIN --------
- if [[ ! -f ${PackFile} ]] ; then
-   echo -e "\tNo packages file has been found.\n"
-@@ -183,4 +188,7 @@
- chmod -R +x scripts
- echo -e "done\n"
- 
-+# Patch the scripts
-+for i in ./scripts/*; do PatchBLFSScript "$i"; done
-+
- #clean_configuration
-Index: BLFS/gen-makefile.sh
-===================================================================
---- BLFS/gen-makefile.sh	2016-07-27 20:57:17.275749435 -0300
-+++ BLFS/gen-makefile.sh	2016-07-27 20:58:15.343156474 -0300
-@@ -42,6 +42,7 @@
- #----------------------------------#
- (
- cat << EOF
-+	mkdir -p logs
- 	@source ${TOPDIR}/envars.conf && ${BUILD_SCRIPTS}/\$@ >logs/\$@ 2>&1
- EOF
- ) >> $MKFILE.tmp
