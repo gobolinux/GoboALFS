@@ -149,7 +149,7 @@ then
     else
         echo "Running menuconfig."
         # E for exit, Y for yes
-        BatchRun "ey" make menuconfig LIBS="-lncurses -ltinfo"
+        BatchRun "ey" make menuconfig LIBS="$(pkg-config --libs ncurses)"
     fi
 
     echo "Processing JHALFS configuration file"
