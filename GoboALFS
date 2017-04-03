@@ -163,6 +163,19 @@ then
     echo "LFS/BLFS processing complete" > "$BUILDDIR/blfs_root/work/.done"
 fi
 
+if [ ! -d "$BUILDDIR/Programs/Sudo" ]
+then
+    cat << EOF > "$BUILDDIR/bin/sudo"
+#!/bin/bash
+if [ "$1" = "-u" ]
+then shift 2
+else shift 1
+fi
+exec "$@"
+EOF
+    chmod +x "$BUILDDIR/bin/sudo"
+fi
+
 # Move left-over files to the packages where they belong
 
 MoveSettingsFile nsswitch.conf Glibc
