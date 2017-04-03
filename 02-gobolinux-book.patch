@@ -66,3 +66,16 @@ Index: chapter06/coreutils.xml
  
      <note>
        <para>In the past, many bugs were found in this patch. When reporting new
+Index: chapter06/gcc.xml
+===================================================================
+--- chapter06/gcc.xml.orig	2017-04-03 08:51:09.618819202 -0300
++++ chapter06/gcc.xml	2017-04-03 08:51:33.937819658 -0300
+@@ -191,7 +191,7 @@ ln -sfv ../../libexec/gcc/$(gcc -dumpmac
+     href="adjusting.xml"
+     xpointer="xpointer(//*[@os='g'])"/>
+ 
+-<screen><userinput>grep -B4 '^ /usr/include' dummy.log</userinput></screen>
++<screen><userinput>grep -B4 '^ /usr/include\|^ /usr/local/include' dummy.log</userinput></screen>
+ 
+     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"
+     href="adjusting.xml"
