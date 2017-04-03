@@ -3,7 +3,14 @@
 # Remove a program from ROLayer and RootFS and cleans up broken links. The tarball at Packages is also deleted.
 # Lucas C. Villa Real <lucasvr@gobolinux.org>
 
-WORKDIR=/GoboLinux
+if [ ! -e $(dirname "$0")/.workdir.conf ]
+then
+    echo "$(dirname $0)/.workdir.conf does not exist."
+    echo "Please run the GoboALFS script before launching this script."
+    exit 1
+fi
+
+source $(dirname "$0")/.workdir.conf
 ARCH=$(uname -m)
 
 function Die() { echo "$@"; exit 1; }

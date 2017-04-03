@@ -1,12 +1,19 @@
 #!/bin/bash
 
-WORKDIR=/GoboLinux
-BUILDDIR=$WORKDIR/RootFS
-
 if [ $UID = 0 ]
 then SUDO=
 else SUDO="sudo -E"
 fi
+
+if [ ! -e $(dirname "$0")/.workdir.conf ]
+then
+    echo "$(dirname $0)/.workdir.conf does not exist."
+    echo "Please run the GoboALFS script before launching this script."
+    exit 1
+fi
+
+source $(dirname "$0")/.workdir.conf
+BUILDDIR=$WORKDIR/RootFS
 
 umount_sys=
 umount_proc=

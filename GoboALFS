@@ -47,6 +47,8 @@ ALFS_CONFIGURATION="$GOBOALFS_DIR/jhalfs/configuration"
 PACKAGEDIR=$WORKDIR/Packages
 BUILDDIR=$WORKDIR/RootFS
 
+echo "WORKDIR=$WORKDIR" > $(dirname "$0")/.workdir.conf
+
 # Do not let our calls to git fail upon certificate validation issues
 export GIT_SSL_NO_VERIFY=1
 
