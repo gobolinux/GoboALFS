@@ -167,11 +167,10 @@ if [ ! -d "$BUILDDIR/Programs/Sudo" ]
 then
     sudo tee "$BUILDDIR/bin/sudo" << EOF > /dev/null
 #!/bin/bash
-if [ "$1" = "-u" ]
+if [ "\$1" = "-u" ]
 then shift 2
-else shift 1
 fi
-exec "$@"
+exec "\$@"
 EOF
     sudo chmod +x "$BUILDDIR/bin/sudo"
 fi
