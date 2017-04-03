@@ -165,7 +165,7 @@ fi
 
 if [ ! -d "$BUILDDIR/Programs/Sudo" ]
 then
-    cat << EOF > "$BUILDDIR/bin/sudo"
+    sudo tee "$BUILDDIR/bin/sudo" << EOF > /dev/null
 #!/bin/bash
 if [ "$1" = "-u" ]
 then shift 2
@@ -173,7 +173,7 @@ else shift 1
 fi
 exec "$@"
 EOF
-    chmod +x "$BUILDDIR/bin/sudo"
+    sudo chmod +x "$BUILDDIR/bin/sudo"
 fi
 
 # Move left-over files to the packages where they belong
