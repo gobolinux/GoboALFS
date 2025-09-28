@@ -219,13 +219,13 @@ sudo perl -pi -e "s,/tmp/cacerts,,g" "$BUILDDIR"/Programs/CAcerts/${cacertsVersi
 # for a list of common locales.
 
 InChroot localedef -i pt_BR -f ISO-8859-1 pt_BR
-InChroot localedef -i pt_BR -f UTF-8      pt_BR
+InChroot localedef -i pt_BR -f UTF-8      pt_BR.UTF-8
 InChroot localedef -i pl_PL -f ISO-8859-2 pl_PL
-InChroot localedef -i pl_PL -f UTF-8      pl_PL
+InChroot localedef -i pl_PL -f UTF-8      pl_PL.UTF-8
 InChroot localedef -i hu_HU -f ISO-8859-2 hu_HU
-InChroot localedef -i hu_HU -f UTF-8      hu_HU
+InChroot localedef -i hu_HU -f UTF-8      hu_HU.UTF-8
 InChroot localedef -i ru_RU -f KOI8-R     ru_RU
-InChroot localedef -i ru_RU -f UTF-8      ru_RU
+InChroot localedef -i ru_RU -f UTF-8      ru_RU.UTF-8
 
 # Update /etc/passwd, /etc/group, /etc/resolv.conf, /etc/sudoers, and udev settings
 
