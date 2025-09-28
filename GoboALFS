@@ -130,7 +130,7 @@ then
     jhalfsPatch=$(ls custom/*gobolinux-jhalfs.patch)
     if [ ! -e ".gobolinux-patched" ]
     then
-        patch -i "$jhalfsPatch" -p0
+        patch -i "$jhalfsPatch" -p1
         touch .gobolinux-patched
     fi
 

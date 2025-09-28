@@ -1,20 +1,31 @@
-Index: BLFS/gen-makefile.sh
-===================================================================
---- BLFS/gen-makefile.sh	(revision 3949)
-+++ BLFS/gen-makefile.sh	(working copy)
-@@ -42,6 +42,7 @@
+Subject: [PATCH] GoboLinux jhalfs patch
+
+---
+ BLFS/gen-makefile.sh              |  1 +
+ BLFS/gen_pkg_book.sh              | 10 ++++++++++
+ common/libs/func_check_version.sh |  2 +-
+ common/libs/func_install_blfs     |  2 +-
+ install-blfs-tools.sh             |  5 ++++-
+ jhalfs                            | 10 ++++++++++
+ 6 files changed, 27 insertions(+), 3 deletions(-)
+
+diff --git a/BLFS/gen-makefile.sh b/BLFS/gen-makefile.sh
+index 9143c9e..108c610 100755
+--- a/BLFS/gen-makefile.sh
++++ b/BLFS/gen-makefile.sh
+@@ -40,6 +40,7 @@ __write_build_cmd() {              #
  #----------------------------------#
  (
  cat << EOF
 +	mkdir -p logs
- 	@source ${TOPDIR}/envars.conf && ${BUILD_SCRIPTS}/\$@ >logs/\$@ 2>&1
+ 	@${BUILD_SCRIPTS}/\$@ >logs/\$@ 2>&1
  EOF
  ) >> $MKFILE.tmp
-Index: BLFS/gen_pkg_book.sh
-===================================================================
---- BLFS/gen_pkg_book.sh	(revision 3949)
-+++ BLFS/gen_pkg_book.sh	(working copy)
-@@ -123,6 +123,11 @@
+diff --git a/BLFS/gen_pkg_book.sh b/BLFS/gen_pkg_book.sh
+index 6d47325..b853925 100755
+--- a/BLFS/gen_pkg_book.sh
++++ b/BLFS/gen_pkg_book.sh
+@@ -163,6 +163,12 @@ source ${LibDir}/constants.inc
  source ${LibDir}/func_dependencies
  [[ $? > 0 ]] && echo -e "\n\tERROR: func_dependencies did not load..\n" && exit
  
@@ -23,22 +34,24 @@ Index: BLFS/gen_pkg_book.sh
 +source ${LibDir}/gobolinux_patch_buildscript
 +[[ $? > 0 ]] && echo -e "\n\tERROR: gobolinux_patch_buildscript did not load..\n" && exit
 +
++
  #------- MAIN --------
  if [[ ! -f ${PackFile} ]] ; then
    echo -e "\tNo packages file has been found.\n"
-@@ -185,4 +190,7 @@
- chmod -R +x scripts
- echo -e "done\n"
- 
+@@ -347,4 +353,8 @@ EOF
+    cat head.tmp script.tmp tail.tmp >scripts/*${TARGET}
+    rm *.tmp
+ fi
++
 +# Patch the scripts
 +for i in ./scripts/*; do PatchBLFSScript "$i"; done
 +
  #clean_configuration
-Index: common/libs/func_check_version.sh
-===================================================================
---- common/libs/func_check_version.sh	(revision 3949)
-+++ common/libs/func_check_version.sh	(working copy)
-@@ -112,7 +112,7 @@
+diff --git a/common/libs/func_check_version.sh b/common/libs/func_check_version.sh
+index 6f89072..14d299a 100644
+--- a/common/libs/func_check_version.sh
++++ b/common/libs/func_check_version.sh
+@@ -112,7 +112,7 @@ check_prerequisites() {      #
      check_version "$MIN_Glibc_VER"     "$(ldd --version  | head -n1 | awk '{print $NF}')"   "GLIBC"
    fi
    if [ -n "$MIN_Binutils_VER" ]; then
@@ -47,20 +60,11 @@ Index: common/libs/func_check_version.sh
    fi
    if [ -n "$MIN_Tar_VER" ]; then
      check_version "$MIN_Tar_VER"       "$(tar --version | head -n1 | cut -d" " -f4)"        "TAR"
-Index: common/libs/func_install_blfs
-===================================================================
---- common/libs/func_install_blfs	(revision 3949)
-+++ common/libs/func_install_blfs	(working copy)
-@@ -157,7 +157,7 @@
- rm -v $BUILDDIR$BLFS_ROOT/download_script
- 
- # Suppresses unneeded parts of the scriptlets
--if [ "$DEP_LIBXSLT" = y ]; then
-+if [ "$DEP_LIBXSLT" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*docbook-xsl &> /dev/null) ]; then
-   # libxslt pulls docbook-xsl in, which populates the catalog with annoying
-   # **EDITME** references. Fortunately, those lines are regognizable because
-   # they occur between lines containing '/etc/xml/catalog' at the end of the
-@@ -175,13 +175,13 @@
+diff --git a/common/libs/func_install_blfs b/common/libs/func_install_blfs
+index b481c76..3804ba4 100644
+--- a/common/libs/func_install_blfs
++++ b/common/libs/func_install_blfs
+@@ -207,7 +207,7 @@ ba
  d}' \
        $BUILDDIR$BLFS_ROOT/scripts/*docbook-xsl
  fi
@@ -68,33 +72,12 @@ Index: common/libs/func_install_blfs
 +if [ "$DEP_SUDO" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*sudo &> /dev/null) ]; then
    sed -i '/cat.*pam.d/i mkdir -p /etc/pam.d' $BUILDDIR$BLFS_ROOT/scripts/*sudo
  fi
--if [ "$DEP_SVN" = y ]; then
-+if [ "$DEP_SVN" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*subversion &> /dev/null) ]; then
-   sed -i -e /javahl/d -e /swig/d $BUILDDIR$BLFS_ROOT/scripts/*subversion
- fi
--if [ "$DEP_LYNX" = y ]; then
-+if [ "$DEP_LYNX" = y ] && [ $(stat $BUILDDIR$BLFS_ROOT/scripts/*lynx &> /dev/null) ]; then
-   if [ "$DEP_OPENSSL" = y -o "$DEP_WGET" = y ]; then
-     sed -e 's/configure/& --with-ssl/' \
-         -i $BUILDDIR$BLFS_ROOT/scripts/*lynx
-Index: common/libs/func_wrt_Makefile
-===================================================================
---- common/libs/func_wrt_Makefile	(revision 3949)
-+++ common/libs/func_wrt_Makefile	(working copy)
-@@ -110,6 +110,8 @@
-          ;;
-      libdbus) echo $(grep "^dbus" $JHALFSDIR/pkg_tarball_list | head -n1 )
-          ;;
-+     gobolinux) echo $(grep "^gobolinux_alfs" $JHALFSDIR/pkg_tarball_list | head -n1 )
-+         ;;
-      *)  echo $(grep "^$script_name[_-][[:digit:]]" $JHALFSDIR/pkg_tarball_list | head -n1 )
-          ;;
-    esac
-Index: install-blfs-tools.sh
-===================================================================
---- install-blfs-tools.sh	(revision 3949)
-+++ install-blfs-tools.sh	(working copy)
-@@ -77,7 +77,7 @@
+ # At last generates the build Makefile
+diff --git a/install-blfs-tools.sh b/install-blfs-tools.sh
+index 28d0997..2e5aa26 100755
+--- a/install-blfs-tools.sh
++++ b/install-blfs-tools.sh
+@@ -80,7 +80,7 @@ fi
  COMMON_DIR="common"
  # blfs-tool envars
  BLFS_TOOL='y'
@@ -103,23 +86,23 @@ Index: install-blfs-tools.sh
  BLFS_ROOT="${BLFS_ROOT:=/blfs_root}"
  TRACKING_DIR="${TRACKING_DIR:=/var/lib/jhalfs/BLFS}"
  INITSYS="${INITSYS:=sysv}"
-@@ -165,6 +165,9 @@
- [[ $BLFS_BOOK = $BUILDDIR$BLFS_ROOT/$BLFS_XML ]] ||
- cp -a $BLFS_BOOK $BUILDDIR$BLFS_ROOT/$BLFS_XML
+@@ -171,6 +171,9 @@ cp -a $LFS_BOOK $BUILDDIR$BLFS_ROOT/$LFS_XML
+ [[ $VERBOSITY > 0 ]] && echo "... OK"
+ }
  
 +# Replace the default configuration file with the Gobo-ALFS one.
 +cp configuration.blfs ${BUILDDIR}${BLFS_ROOT}/configuration
 +
+ [[ $VERBOSITY > 0 ]] && echo "Initializing the BLFS tool directory "
  make -j1 -C $BUILDDIR$BLFS_ROOT \
       TRACKING_DIR=$TRACKING_DIR \
-      REV=$INITSYS            \
-Index: jhalfs
-===================================================================
---- jhalfs	(revision 3949)
-+++ jhalfs	(working copy)
-@@ -430,6 +430,16 @@
- 
- # Download or updates the book source
+diff --git a/jhalfs b/jhalfs
+index 8862d7d..6b41282 100755
+--- a/jhalfs
++++ b/jhalfs
+@@ -382,6 +382,16 @@ if [[ "$REBUILD_MAKEFILE" = "n" ]] ; then
+ # Note that all customization to $JHALFSDIR have to be done before this.
+ # But the LFS book is needed for BLFS tools.
    get_book
 +  BOOK_PATCH_FILE=$CWD/custom/02-gobolinux-book.patch
 +  DEVTREE=$JHALFSDIR/lfs-development
@@ -133,4 +116,7 @@ Index: jhalfs
 +  fi
    extract_commands
    echo "${SD_BORDER}${nl_}"
- 
+   cd "$CWD" # the functions above change directory
+-- 
+2.51.0
+
