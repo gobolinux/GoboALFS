@@ -88,10 +88,10 @@ then
     exit 1
 fi
 
-svn --version &> /dev/null
+git --version &> /dev/null
 if [ $? != 0 ]
 then
-    echo "Please make sure that svn in installed (used to download the LFS snapshot)."
+    echo "Please make sure that Git is installed (used to download the LFS snapshot)."
     exit 1
 fi
 
@@ -117,8 +117,8 @@ mkdir -p "$SRC_ARCHIVE"
 
 if [ ! -d "$WORKDIR/jhalfs-trunk" ]
 then
-    echo "Downloading JHALFS from Subversion"
-    svn co svn://svn.linuxfromscratch.org/ALFS/jhalfs/trunk "$WORKDIR/jhalfs-trunk"
+    echo "Downloading JHALFS from Git"
+    git clone https://git.linuxfromscratch.org/jhalfs.git "$WORKDIR/jhalfs-trunk"
 
     mkdir -p "$WORKDIR/jhalfs-trunk/custom"
     pushd "$WORKDIR/jhalfs-trunk" > /dev/null

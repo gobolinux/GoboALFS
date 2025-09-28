@@ -4,7 +4,7 @@ new GoboLinux releases.
 
 ## Prerequisites
 Your host system must have the following development packages:
-* subversion
+* git
 * bison
 * gawk
 * make
@@ -16,7 +16,6 @@ Your host system must have the following development packages:
 * docbook2x
 * libncurses5-dev
 * texinfo
-* git
 * uuid-dev
 * autoconf
 * unionfs-fuse
@@ -42,8 +41,9 @@ mount options=(rw,newinstance) -> /dev/pts/,
 ```
 
 ## Usage
-Logged in as `lfs`, simply create a work directory (e.g., `/GoboLinux`) and
-launch the main script passing that directory as its sole argument:
+Logged in as `lfs` and inside the project folder, simply create a work
+directory (e.g., `GoboLinux`) and launch the main script passing that directory
+as its sole argument:
 ```
-$ ./GoboALFS /GoboLinux
+$ ./GoboALFS GoboLinux
 ```
